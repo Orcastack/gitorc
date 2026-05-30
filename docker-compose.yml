@@ -62,7 +62,7 @@ services:
       - namenode
 
   hbase:
-    image: harisekhon/hbase:2.4
+    image: harisekhon/hbase:latest
     container_name: gitorc-hbase
     environment:
       HBASE_MANAGES_ZK: "true"
