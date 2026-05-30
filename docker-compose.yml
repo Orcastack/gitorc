@@ -1,3 +1,21 @@
+x-gitorc-security-env: &gitorc-security-env
+  GITORC_REPOSITORY_IDENTITY: ${GITORC_REPOSITORY_IDENTITY:-orca:repo:3f6d8c3e-6c96-4d8c-a2d3-6f4a8f4b7f2a}
+  GITORC_BUILD_HASH: ${GITORC_BUILD_HASH:-sha256:local-development}
+  GITORC_SIGNING_PRIVATE_KEY_PATH: ${GITORC_SIGNING_PRIVATE_KEY_PATH:-/run/secrets/orca-signing-private.pem}
+  GITORC_SIGNING_PUBLIC_KEY_PATH: ${GITORC_SIGNING_PUBLIC_KEY_PATH:-/run/secrets/orca-signing-public.pem}
+  GITORC_ENFORCE_SIGNING: ${GITORC_ENFORCE_SIGNING:-false}
+  GITORC_ENFORCE_DIRECTORY: ${GITORC_ENFORCE_DIRECTORY:-false}
+  GITORC_LDAP_ADDRESS: ${GITORC_LDAP_ADDRESS:-ldap://ldap:389}
+  GITORC_LDAP_SERVICE_ACCOUNT_DN: ${GITORC_LDAP_SERVICE_ACCOUNT_DN:-cn=service-account,ou=system,dc=orca,dc=local}
+  GITORC_LDAP_SERVICE_ACCOUNT_PASSWORD_FILE: ${GITORC_LDAP_SERVICE_ACCOUNT_PASSWORD_FILE:-/run/secrets/ldap-bind-password.txt}
+  GITORC_LDAP_COMPONENT_BASE_DN: ${GITORC_LDAP_COMPONENT_BASE_DN:-ou=components,dc=orca,dc=local}
+  GITORC_LDAP_REPOSITORY_BASE_DN: ${GITORC_LDAP_REPOSITORY_BASE_DN:-ou=repositories,dc=orca,dc=local}
+  GITORC_LDAP_AUDIT_BASE_DN: ${GITORC_LDAP_AUDIT_BASE_DN:-ou=audit,dc=orca,dc=local}
+  GITORC_LDAP_AUTO_REGISTER: ${GITORC_LDAP_AUTO_REGISTER:-false}
+  GITORC_RBAC_REALM: ${GITORC_RBAC_REALM:-gitorc-platform}
+  GITORC_RBAC_ROLE_BASE_DN: ${GITORC_RBAC_ROLE_BASE_DN:-ou=roles,dc=orca,dc=local}
+  GITORC_RBAC_REQUIRED_ROLE: ${GITORC_RBAC_REQUIRED_ROLE:-platform-service}
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -80,9 +98,12 @@ services:
     command: sh -c "go mod download && go run ./cmd/gitorc-gateway"
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
+      - ./infra/security:/run/secrets:ro
     environment:
       GITORC_GATEWAY_HTTP_PORT: 8080
       GITORC_GATEWAY_GRPC_PORT: 9080
+      GITORC_GATEWAY_IDENTITY: ${GITORC_GATEWAY_IDENTITY:-orca:service:4c3f7ef4-bf28-4dc0-903c-b3cfd4fdd9b4}
+      <<: *gitorc-security-env
     ports:
       - "8080:8080"
       - "9080:9080"
@@ -100,9 +121,12 @@ services:
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
       - ./infra/git/repos:/srv/git
+      - ./infra/security:/run/secrets:ro
     environment:
       GITORC_GIT_HTTP_PORT: 8081
       GITORC_GIT_GRPC_PORT: 9081
+      GITORC_GIT_IDENTITY: ${GITORC_GIT_IDENTITY:-orca:service:dce9129f-783a-4816-8ee1-8676fa5192a8}
+      <<: *gitorc-security-env
     ports:
       - "8081:8081"
       - "9081:9081"
@@ -117,9 +141,12 @@ services:
     command: sh -c "go mod download && go run ./cmd/gitorc-review-service"
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
+      - ./infra/security:/run/secrets:ro
     environment:
       GITORC_REVIEW_HTTP_PORT: 8082
       GITORC_REVIEW_GRPC_PORT: 9082
+      GITORC_REVIEW_IDENTITY: ${GITORC_REVIEW_IDENTITY:-orca:service:4cc2c0ec-0af8-4d25-a565-a301e2e8f324}
+      <<: *gitorc-security-env
     ports:
       - "8086:8082"
       - "9082:9082"
@@ -135,9 +162,12 @@ services:
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
       - ./infra/artifacts:/workspace/artifacts
+      - ./infra/security:/run/secrets:ro
     environment:
       GITORC_CI_HTTP_PORT: 8083
       GITORC_CI_GRPC_PORT: 9083
+      GITORC_CI_IDENTITY: ${GITORC_CI_IDENTITY:-orca:service:71f1ba7b-db62-4369-a133-7be30c1d9e2d}
+      <<: *gitorc-security-env
     ports:
       - "8083:8083"
       - "9083:9083"
@@ -155,9 +185,12 @@ services:
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
       - ./infra/deploy:/workspace/deploy
+      - ./infra/security:/run/secrets:ro
     environment:
       GITORC_CD_HTTP_PORT: 8084
       GITORC_CD_GRPC_PORT: 9084
+      GITORC_CD_IDENTITY: ${GITORC_CD_IDENTITY:-orca:service:dd3490dc-e08d-43bb-abaf-2874e46ad7ec}
+      <<: *gitorc-security-env
     ports:
       - "8084:8084"
       - "9084:9084"
@@ -172,9 +205,12 @@ services:
     command: sh -c "go mod download && go run ./cmd/gitorc-analytics-service"
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
+      - ./infra/security:/run/secrets:ro
     environment:
       GITORC_ANALYTICS_HTTP_PORT: 8085
       GITORC_ANALYTICS_GRPC_PORT: 9085
+      GITORC_ANALYTICS_IDENTITY: ${GITORC_ANALYTICS_IDENTITY:-orca:service:f4ea4140-9117-4351-b0f4-71d90b4cd0b5}
+      <<: *gitorc-security-env
     ports:
       - "8085:8085"
       - "9085:9085"

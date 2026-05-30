@@ -18,6 +18,7 @@ Even though the workflow file started from GitHub's Jekyll sample, it now builds
 - it uploads `gitorcweb/dist`
 - it deploys with GitHub Pages actions
 - the frontend base path is derived from the repository name at workflow runtime
+- it signs the deployed frontend artifact and publishes a public verification key alongside it
 
 ### Pages requirements
 
@@ -52,6 +53,14 @@ The local deployment topology is defined in `docker-compose.yml` and includes:
 - Analytics Service
 - Web UI
 
+The Go services now also receive explicit identity, signing, LDAP, and RBAC configuration through a shared Compose environment block. Secret material is expected under `infra/security/` and is mounted read-only into `/run/secrets` inside the Go containers.
+
+Expected secret file names:
+
+- `infra/security/orca-signing-private.pem`
+- `infra/security/orca-signing-public.pem`
+- `infra/security/ldap-bind-password.txt`
+
 ### Start the stack
 
 ```bash
@@ -80,3 +89,12 @@ This repository is not yet packaged as a hardened production deployment. The cur
 3. Move service configuration into explicit environment files or a config service.
 4. Add real health checks for all application containers.
 5. Introduce authentication, authorization, and audit-safe secret handling.
+
+## GitHub Actions signing
+
+The validation workflow now builds backend binaries, generates repository-owned Ed25519 keys during the workflow run, signs binary attestations with `gitorc-secctl`, and uploads signed artifacts.
+
+The Pages workflow does the same for the frontend site artifact and publishes:
+
+- `orca-attestation.json`
+- `orca-public.pem`

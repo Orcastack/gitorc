@@ -6,15 +6,19 @@ import (
 )
 
 type LDAPConfig struct {
-	Address            string `json:"address"`
-	ServiceAccountDN   string `json:"service_account_dn"`
-	ComponentBaseDN    string `json:"component_base_dn"`
-	RepositoryBaseDN   string `json:"repository_base_dn"`
-	AuditBaseDN        string `json:"audit_base_dn"`
+	Address                  string `json:"address"`
+	ServiceAccountDN         string `json:"service_account_dn"`
+	ServiceAccountPasswordFile string `json:"service_account_password_file"`
+	ComponentBaseDN          string `json:"component_base_dn"`
+	RepositoryBaseDN         string `json:"repository_base_dn"`
+	AuditBaseDN              string `json:"audit_base_dn"`
+	AutoRegister             bool   `json:"auto_register"`
 }
 
 type RBACConfig struct {
-	Realm string `json:"realm"`
+	Realm        string `json:"realm"`
+	RoleBaseDN   string `json:"role_base_dn"`
+	RequiredRole string `json:"required_role"`
 }
 
 type RuntimePolicy struct {
@@ -98,6 +102,9 @@ func BuildRuntimePolicy(options RuntimeOptions) (RuntimePolicy, error) {
 		if err := policy.ValidateDirectoryRequirements(); err != nil {
 			return RuntimePolicy{}, err
 		}
+		if err := EnforceDirectoryPolicy(policy); err != nil {
+			return RuntimePolicy{}, err
+		}
 	}
 
 	return policy, nil
@@ -110,8 +117,17 @@ func (policy RuntimePolicy) ValidateDirectoryRequirements() error {
 	if policy.RBAC.Realm == "" {
 		return fmt.Errorf("rbac realm is required when directory enforcement is enabled")
 	}
+	if policy.RBAC.RoleBaseDN == "" {
+		return fmt.Errorf("rbac role base DN is required when directory enforcement is enabled")
+	}
+	if policy.RBAC.RequiredRole == "" {
+		return fmt.Errorf("rbac required role is required when directory enforcement is enabled")
+	}
 	if policy.LDAP.ComponentBaseDN == "" || policy.LDAP.RepositoryBaseDN == "" || policy.LDAP.AuditBaseDN == "" {
 		return fmt.Errorf("ldap base DNs are required when directory enforcement is enabled")
+	}
+	if policy.LDAP.ServiceAccountDN != "" && policy.LDAP.ServiceAccountPasswordFile == "" {
+		return fmt.Errorf("ldap service account password file is required when ldap service account DN is set")
 	}
 	return nil
 }

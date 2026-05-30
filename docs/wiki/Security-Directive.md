@@ -51,12 +51,16 @@ Configured fields include:
 
 - LDAP address
 - LDAP service account DN
+- LDAP service account password file
 - component base DN
 - repository base DN
 - audit base DN
+- LDAP auto-registration switch
 - RBAC realm
+- RBAC role base DN
+- RBAC required role
 
-When directory enforcement is enabled, the runtime requires those fields to be present.
+When directory enforcement is enabled, the runtime requires those fields and performs a live LDAP bind, identity registration lookup, optional auto-registration, and RBAC membership search before startup.
 
 ## Python directory dependencies
 
@@ -85,13 +89,14 @@ What is implemented now:
 - one shared runtime attestation structure
 - one stable repository identity default
 - one LDAP and RBAC configuration model for all Go services
+- live LDAP bind, registration lookup, and RBAC membership enforcement through the shared runtime
+- a repository-owned signing tool for CI and Pages artifacts
 
 What still requires deeper platform work:
 
-- live LDAP registration flows against a real directory
-- live RBAC synchronization against a real Fortress deployment
 - build pipeline signing for released binaries
-- strict enforcement of code-only execution beyond the service runtime layer
+- stricter repository policy enforcement for non-Go components
+- deeper Fortress-specific role synchronization beyond the generic LDAP-backed RBAC search
 
 ## Configuration knobs
 
@@ -105,10 +110,14 @@ Common environment variables used by the shared runtime:
 - `GITORC_ENFORCE_DIRECTORY`
 - `GITORC_LDAP_ADDRESS`
 - `GITORC_LDAP_SERVICE_ACCOUNT_DN`
+- `GITORC_LDAP_SERVICE_ACCOUNT_PASSWORD_FILE`
 - `GITORC_LDAP_COMPONENT_BASE_DN`
 - `GITORC_LDAP_REPOSITORY_BASE_DN`
 - `GITORC_LDAP_AUDIT_BASE_DN`
+- `GITORC_LDAP_AUTO_REGISTER`
 - `GITORC_RBAC_REALM`
+- `GITORC_RBAC_ROLE_BASE_DN`
+- `GITORC_RBAC_REQUIRED_ROLE`
 
 ## Developer rule
 

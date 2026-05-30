@@ -1,13 +1,20 @@
 module github.com/atonixdev/gitorc/gitorcapi
 
-go 1.23.0
-
-require google.golang.org/grpc v1.68.1
+go 1.24.0
 
 require (
-	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	github.com/go-ldap/ldap/v3 v3.4.13
+	google.golang.org/grpc v1.68.1
+)
+
+require (
+	github.com/Azure/go-ntlmssp v0.1.0 // indirect
+	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
