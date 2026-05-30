@@ -1,0 +1,82 @@
+# Deployment
+
+## Deployment surfaces in this repository
+
+gitorc currently has two practical deployment targets:
+
+- GitHub Pages for the frontend documentation/control-plane shell
+- Docker Compose for local self-hosted platform development
+
+## GitHub Pages
+
+The Pages workflow lives in `.github/workflows/jekyll-gh-pages.yml`.
+
+Even though the workflow file started from GitHub's Jekyll sample, it now builds the Vite frontend instead of a Jekyll site. The important deployment behavior is:
+
+- the workflow installs frontend dependencies with `npm ci`
+- it builds `gitorcweb`
+- it uploads `gitorcweb/dist`
+- it deploys with GitHub Pages actions
+- the frontend base path is derived from the repository name at workflow runtime
+
+### Pages requirements
+
+To publish successfully:
+
+1. Push the repository to the GitHub owner that should host the site.
+2. Enable GitHub Pages in repository settings.
+3. Set the Pages source to GitHub Actions.
+4. Let the Pages workflow run on `main` or dispatch it manually.
+
+### Important owner rule
+
+The site host comes from the GitHub owner, not from the repository contents. For example:
+
+- `atonixdev/gitorc` publishes under `https://atonixdev.github.io/gitorc/`
+- `atonixcorp/gitorc` publishes under `https://atonixcorp.github.io/gitorc/`
+
+## Docker Compose
+
+The local deployment topology is defined in `docker-compose.yml` and includes:
+
+- Postgres
+- Redpanda
+- Hadoop NameNode
+- Hadoop DataNode
+- HBase
+- Gateway
+- Git Service
+- Review Service
+- CI Service
+- CD Service
+- Analytics Service
+- Web UI
+
+### Start the stack
+
+```bash
+docker compose up --build
+```
+
+### Stop the stack
+
+```bash
+docker compose down
+```
+
+## Production readiness notes
+
+This repository is not yet packaged as a hardened production deployment. The current compose file is best treated as a local integration environment because:
+
+- Go services still build and fetch modules during container startup.
+- The web service still uses the Vite development server path.
+- Secrets and runtime configuration are still minimal.
+- There is no production-grade auth, ingress, persistence strategy, or observability layer yet.
+
+## Recommended next hardening steps
+
+1. Add Dockerfiles for all Go services and build static binaries ahead of runtime.
+2. Build the frontend into static assets and serve it with a small web server image.
+3. Move service configuration into explicit environment files or a config service.
+4. Add real health checks for all application containers.
+5. Introduce authentication, authorization, and audit-safe secret handling.

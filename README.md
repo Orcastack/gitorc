@@ -39,3 +39,16 @@ gitorc/
 ## Current state
 
 This commit establishes the platform skeleton and local runtime topology. It does not yet implement Git packfile handling, review persistence, pipeline execution, or HBase/HDFS writers. Those belong in the next implementation slices, but the repo is now structured around the intended platform instead of an unrelated application layout.
+
+## Wiki
+
+Project documentation now lives in the wiki pages under `docs/wiki`.
+
+- `docs/wiki/Home.md`
+- `docs/wiki/Architecture.md`
+- `docs/wiki/Local-Development.md`
+- `docs/wiki/Deployment.md`
+- `docs/wiki/API-Contracts.md`
+- `docs/wiki/Roadmap.md`
+
+Use `README/DOCUMENTATION_INDEX.md` as the navigation entrypoint.
