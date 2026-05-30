@@ -49,6 +49,7 @@ Project documentation now lives in the wiki pages under `docs/wiki`.
 - `docs/wiki/Local-Development.md`
 - `docs/wiki/Deployment.md`
 - `docs/wiki/API-Contracts.md`
+- `docs/wiki/Security-Directive.md`
 - `docs/wiki/Roadmap.md`
 
 Use `README/DOCUMENTATION_INDEX.md` as the navigation entrypoint.

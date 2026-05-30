@@ -1,0 +1,115 @@
+# Security Directive
+
+## Objective
+
+gitorc now centralizes identity and cryptographic runtime policy in one shared backend module so services do not invent their own formats or signing flows.
+
+## Unified identity pattern
+
+All shared runtime identities follow this format:
+
+`orca:<component-type>:<uuidv4>`
+
+Examples:
+
+- `orca:service:550e8400-e29b-41d4-a716-446655440000`
+- `orca:process:1b4e28ba-2fa1-41d2-883f-0016d3cca427`
+- `orca:repo:3f6d8c3e-6c96-4d8c-a2d3-6f4a8f4b7f2a`
+
+The shared implementation lives in `gitorcapi/internal/platform/security/identity.go`.
+
+## Shared cryptography pattern
+
+The shared cryptography implementation lives in `gitorcapi/internal/platform/security/crypto.go`.
+
+Current enforced primitives:
+
+- signing: Ed25519
+- verification: Ed25519
+- hashing: SHA-256
+- attestation format: repository identity, component identity, process identity, build hash, binary hash, signed timestamp, signature
+
+Keys are loaded from files, not embedded in code. The runtime supports a signed attestation chain that links:
+
+Repository -> Component -> Binary -> Process
+
+## Runtime policy surface
+
+The backend runtime now builds a unified security policy for every Go service in `gitorcapi/internal/platform/app/service.go`.
+
+Each service now exposes:
+
+- `/healthz` with service identity
+- `/metadata` with component, repository, and process identities
+- `/security/runtime` with the resolved runtime policy and attestation payload
+
+## LDAP and RBAC configuration
+
+The runtime policy includes LDAP and RBAC configuration fields so one shared registration and authorization model can be enforced instead of per-service logic.
+
+Configured fields include:
+
+- LDAP address
+- LDAP service account DN
+- component base DN
+- repository base DN
+- audit base DN
+- RBAC realm
+
+When directory enforcement is enabled, the runtime requires those fields to be present.
+
+## Python directory dependencies
+
+The repository now includes the required dependency manifest at:
+
+`sdk/python/orca_security_requirements.txt`
+
+Install it with:
+
+```bash
+pip install -r sdk/python/orca_security_requirements.txt
+```
+
+This manifest contains:
+
+- `ldap3`
+- `py-fortress`
+
+## Current enforcement boundaries
+
+What is implemented now:
+
+- one identity format
+- one shared signing and verification module
+- one shared hashing pattern
+- one shared runtime attestation structure
+- one stable repository identity default
+- one LDAP and RBAC configuration model for all Go services
+
+What still requires deeper platform work:
+
+- live LDAP registration flows against a real directory
+- live RBAC synchronization against a real Fortress deployment
+- build pipeline signing for released binaries
+- strict enforcement of code-only execution beyond the service runtime layer
+
+## Configuration knobs
+
+Common environment variables used by the shared runtime:
+
+- `GITORC_REPOSITORY_IDENTITY`
+- `GITORC_BUILD_HASH`
+- `GITORC_SIGNING_PRIVATE_KEY_PATH`
+- `GITORC_SIGNING_PUBLIC_KEY_PATH`
+- `GITORC_ENFORCE_SIGNING`
+- `GITORC_ENFORCE_DIRECTORY`
+- `GITORC_LDAP_ADDRESS`
+- `GITORC_LDAP_SERVICE_ACCOUNT_DN`
+- `GITORC_LDAP_COMPONENT_BASE_DN`
+- `GITORC_LDAP_REPOSITORY_BASE_DN`
+- `GITORC_LDAP_AUDIT_BASE_DN`
+- `GITORC_RBAC_REALM`
+
+## Developer rule
+
+Do not add per-service identity generators, per-service signing routines, or repository-specific cryptographic exceptions. Extend the shared module instead.

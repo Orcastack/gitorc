@@ -6,15 +6,34 @@ import (
 
 	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/app"
 	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/config"
+	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/security"
 )
 
 func main() {
 	err := app.Run(context.Background(), app.Config{
-		Name:     "gitorc-gateway",
-		Role:     "api-gateway",
-		Summary:  "Single entrypoint for projects, reviews, pipelines, deployments, and analytics.",
-		HTTPPort: config.String("GITORC_GATEWAY_HTTP_PORT", "8080"),
-		GRPCPort: config.String("GITORC_GATEWAY_GRPC_PORT", "9080"),
+		Name:               "gitorc-gateway",
+		Role:               "api-gateway",
+		Summary:            "Single entrypoint for projects, reviews, pipelines, deployments, and analytics.",
+		HTTPPort:           config.String("GITORC_GATEWAY_HTTP_PORT", "8080"),
+		GRPCPort:           config.String("GITORC_GATEWAY_GRPC_PORT", "9080"),
+		ComponentType:      "service",
+		ComponentIdentity:  config.String("GITORC_GATEWAY_IDENTITY", ""),
+		RepositoryIdentity: config.String("GITORC_REPOSITORY_IDENTITY", security.DefaultRepositoryIdentity),
+		BuildHash:          config.String("GITORC_BUILD_HASH", "sha256:unavailable"),
+		PrivateKeyPath:     config.String("GITORC_SIGNING_PRIVATE_KEY_PATH", ""),
+		PublicKeyPath:      config.String("GITORC_SIGNING_PUBLIC_KEY_PATH", ""),
+		EnforceSigning:     config.Bool("GITORC_ENFORCE_SIGNING", false),
+		EnforceDirectory:   config.Bool("GITORC_ENFORCE_DIRECTORY", false),
+		LDAP: security.LDAPConfig{
+			Address:          config.String("GITORC_LDAP_ADDRESS", ""),
+			ServiceAccountDN: config.String("GITORC_LDAP_SERVICE_ACCOUNT_DN", ""),
+			ComponentBaseDN:  config.String("GITORC_LDAP_COMPONENT_BASE_DN", ""),
+			RepositoryBaseDN: config.String("GITORC_LDAP_REPOSITORY_BASE_DN", ""),
+			AuditBaseDN:      config.String("GITORC_LDAP_AUDIT_BASE_DN", ""),
+		},
+		RBAC: security.RBACConfig{
+			Realm: config.String("GITORC_RBAC_REALM", ""),
+		},
 	})
 	if err != nil {
 		log.Fatal(err)

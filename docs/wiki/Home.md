@@ -27,6 +27,7 @@ It does not yet have full Git packfile ingestion, durable review persistence, or
 - [Local Development](Local-Development.md)
 - [Deployment](Deployment.md)
 - [API Contracts](API-Contracts.md)
+- [Security Directive](Security-Directive.md)
 - [Roadmap](Roadmap.md)
 
 ## Repository layout
@@ -74,4 +75,5 @@ gitorc/
 2. Use [Local Development](Local-Development.md) to run the stack locally.
 3. Use [Deployment](Deployment.md) for GitHub Pages and container runtime notes.
 4. Review [API Contracts](API-Contracts.md) before adding backend features.
-5. Use [Roadmap](Roadmap.md) to plan the next implementation slice.
+5. Read [Security Directive](Security-Directive.md) before changing service identity, signing, or authorization behavior.
+6. Use [Roadmap](Roadmap.md) to plan the next implementation slice.

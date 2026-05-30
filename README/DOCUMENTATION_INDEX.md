@@ -14,6 +14,7 @@ This index points to the current, project-specific documentation for gitorc.
 - [../docs/wiki/Local-Development.md](../docs/wiki/Local-Development.md)
 - [../docs/wiki/Deployment.md](../docs/wiki/Deployment.md)
 - [../docs/wiki/API-Contracts.md](../docs/wiki/API-Contracts.md)
+- [../docs/wiki/Security-Directive.md](../docs/wiki/Security-Directive.md)
 - [../docs/wiki/Roadmap.md](../docs/wiki/Roadmap.md)
 
 ## Existing project docs
