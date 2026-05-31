@@ -580,14 +580,29 @@ const landingPages: LandingPage[] = [
   },
   {
     id: 'docs-inventory',
-    label: 'Developer documentation',
-    title: 'Developer documentation for platform, pipelines, cloud deployment, and APIs',
-    intro: 'Documentation should help developers and stakeholders understand the platform quickly, with clear paths through architecture, quickstarts, operations, cloud deployment workflows, and APIs.',
+    label: 'Documentation',
+    title: 'Documentation for the hardware-software CI/CD automation platform',
+    intro: 'Documentation explains how GITORC operates as a hardware-software CI/CD automation platform across repositories, pipelines, identity enforcement, virtualization, deployment, and system operations.',
     sections: [
-      { title: 'Documentation surfaces', links: [{ label: 'API reference', targetId: 'api-reference' }, { label: 'Architecture docs', targetId: 'architecture-docs' }, { label: 'Local development guide', targetId: 'local-development-guide' }] },
-      { title: 'Inventory', bullets: ['README and architecture docs describe the platform structure and operating model.', 'API documentation and contracts explain integration surfaces.', 'Local development docs define bootstrap, build, and endpoint behavior.'], links: [{ label: 'First pipeline in 10 minutes', targetId: 'first-pipeline-10-minutes', detail: 'Quickstart guides live under developer documentation.' }] },
+      {
+        title: 'Documentation surfaces',
+        links: [
+          { label: 'API reference', targetId: 'api-reference', detail: 'Control-plane and service integration contracts.' },
+          { label: 'Architecture docs', targetId: 'architecture-docs', detail: 'Service topology, workflow relationships, and runtime boundaries.' },
+          { label: 'Local development guide', targetId: 'local-development-guide', detail: 'Bootstrap, build, verification, and local operating steps.' },
+        ],
+      },
+      {
+        title: 'What the docs cover',
+        bullets: [
+          'Platform overview across repositories, pipelines, automation, security, virtualization, deployment, and operations.',
+          'API contracts and control-plane integration points.',
+          'Local bootstrap, build, and runtime verification paths.',
+          'Operational guidance for identity-bound and traceable execution.',
+        ],
+      },
     ],
-    searchTerms: ['docs inventory', 'documentation'],
+    searchTerms: ['documentation', 'platform docs', 'automation docs', 'gitorc docs'],
   },
   {
     id: 'api-reference',
@@ -600,10 +615,20 @@ const landingPages: LandingPage[] = [
   {
     id: 'architecture-docs',
     label: 'Architecture docs',
-    title: 'Architecture docs for platform structure and service relationships',
-    intro: 'Architecture documentation explains how services, UI, data surfaces, and runtime boundaries fit together.',
-    sections: [{ title: 'Architecture focus', bullets: ['Explain the service topology and control plane boundaries.', 'Describe how repository, workflow, deployment, and runtime state interact.', 'Connect platform structure to the operating model.'] }],
-    searchTerms: ['architecture docs', 'platform architecture'],
+    title: 'Architecture docs for the integrated hardware-software automation system',
+    intro: 'Architecture documentation explains how GITORC unifies Git operations, code review, CI/CD pipelines, identity enforcement, virtualization, deployment, and system telemetry into one integrated operating model.',
+    sections: [
+      {
+        title: 'Architecture focus',
+        bullets: [
+          'Explain the control plane, service topology, and execution boundaries.',
+          'Describe how repository, pipeline, deployment, and process identities interact.',
+          'Show how hardware-aware execution, virtualization, and secure orchestration fit together.',
+          'Connect system operations, logs, metrics, and audit evidence back to the platform workflow.',
+        ],
+      },
+    ],
+    searchTerms: ['architecture docs', 'platform architecture', 'service topology', 'integrated system'],
   },
   {
     id: 'local-development-guide',
@@ -619,13 +644,27 @@ const landingPages: LandingPage[] = [
   {
     id: 'developer-community',
     label: 'Community & support',
-    title: 'Developer community for adoption, discussion, and contributor momentum',
-    intro: 'Community channels are part of the platform experience: they support implementation questions, contributor onboarding, and long-term confidence around adoption.',
+    title: 'Community and support for operators, contributors, and platform teams',
+    intro: 'Community channels support the operators, developers, and platform teams using GITORC as a hardware-software CI/CD automation platform, with direct paths for implementation questions, coordination, and contributor onboarding.',
     sections: [
-      { title: 'Community role', bullets: ['Create a place for engineering discussion around workflows and runtime operations.', 'Support contributors and adopters with a visible path to ask questions.', 'Keep community connected to docs, repository history, and contribution flow.'] },
-      { title: 'Related pages', links: [{ label: 'Discord & channels', targetId: 'discord-channels' }, { label: 'Contribution guide', targetId: 'contribution-guide' }, { label: 'Issue templates & RFCs', targetId: 'issue-templates-rfcs' }] },
+      {
+        title: 'Community role',
+        bullets: [
+          'Provide a discussion space for repositories, pipelines, deployment flows, and runtime operations.',
+          'Support contributors and adopters with visible channels for questions and feedback.',
+          'Keep community conversation connected to documentation, repository history, and structured change flow.',
+        ],
+      },
+      {
+        title: 'Related pages',
+        links: [
+          { label: 'Discord & channels', targetId: 'discord-channels' },
+          { label: 'Contribution guide', targetId: 'contribution-guide' },
+          { label: 'Issue templates & RFCs', targetId: 'issue-templates-rfcs' },
+        ],
+      },
     ],
-    searchTerms: ['developer community', 'community support'],
+    searchTerms: ['community', 'support', 'operators', 'contributors'],
   },
   {
     id: 'discord-channels',
@@ -2686,7 +2725,7 @@ export function App() {
             <span className="landing-brand-mark"><LandingSystemMark /></span>
             <span className="landing-brand-copy">
               <strong>GITORC</strong>
-              <span>Hardware & Software Automation</span>
+              <span>Hardware-Software CI/CD Automation Platform</span>
             </span>
           </button>
 
@@ -2753,9 +2792,9 @@ export function App() {
             </div>
           </div>
           <article className="landing-hero-panel">
-            <p className="eyebrow">Hardware & Software Automation</p>
+            <p className="eyebrow">Hardware-Software CI/CD Automation Platform</p>
             <h1>GITORC</h1>
-            <p className="landing-hero-tagline">CI/CD Automation for Hardware & Software.</p>
+            <p className="landing-hero-tagline">Integrated Git, CI/CD, virtualization, identity, and secure orchestration.</p>
             <div className="landing-hero-actions">
               <a className="button button-ghost" href="https://discord.com" rel="noreferrer" target="_blank">Join Discord</a>
               <a className="button button-ghost" href="https://slack.com" rel="noreferrer" target="_blank">Join Slack</a>

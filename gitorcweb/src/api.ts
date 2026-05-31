@@ -216,8 +216,57 @@ function isLocalHostname(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
 }
 
+function isGitHubPagesHostname(hostname: string) {
+  return hostname.endsWith('.github.io');
+}
+
+function resolveConfiguredGatewayBase() {
+  if (!configuredGatewayBase) {
+    return null;
+  }
+
+  if (typeof window === 'undefined') {
+    return configuredGatewayBase;
+  }
+
+  try {
+    return new URL(configuredGatewayBase, window.location.origin).toString().replace(/\/$/, '');
+  } catch {
+    return configuredGatewayBase;
+  }
+}
+
+function shouldUseConfiguredGateway() {
+  const resolvedGatewayBase = resolveConfiguredGatewayBase();
+  if (!resolvedGatewayBase) {
+    return false;
+  }
+
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  try {
+    const gatewayUrl = new URL(resolvedGatewayBase, window.location.origin);
+
+    if (isGitHubPagesHostname(window.location.hostname)) {
+      if (isLocalHostname(gatewayUrl.hostname)) {
+        return false;
+      }
+
+      if (gatewayUrl.origin === window.location.origin) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 function shouldUseStaticOverview() {
-  if (configuredGatewayBase) {
+  if (shouldUseConfiguredGateway()) {
     return false;
   }
 
@@ -229,8 +278,10 @@ function shouldUseStaticOverview() {
 }
 
 function resolveGatewayCandidates() {
-  if (configuredGatewayBase) {
-    return [configuredGatewayBase];
+  const resolvedGatewayBase = resolveConfiguredGatewayBase();
+
+  if (resolvedGatewayBase && shouldUseConfiguredGateway()) {
+    return [resolvedGatewayBase];
   }
 
   if (typeof window === 'undefined') {
