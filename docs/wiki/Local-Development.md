@@ -2,8 +2,6 @@
 
 ## Prerequisites
 
-You need the following tools to work productively in this repository:
-
 - Go 1.23
 - Node.js 20+
 - npm

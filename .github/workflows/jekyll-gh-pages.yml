@@ -52,6 +52,7 @@ jobs:
         working-directory: gitorcweb
         env:
           GITORC_WEB_BASE: /${{ github.event.repository.name }}/
+          VITE_GITORC_GATEWAY_URL: https://api.gitorc.org
         run: npm run build
       - name: Generate Pages signing keys
         run: |

@@ -27,7 +27,10 @@ To publish successfully:
 1. Push the repository to the GitHub owner that should host the site.
 2. Enable GitHub Pages in repository settings.
 3. Set the Pages source to GitHub Actions.
-4. Let the Pages workflow run on `main` or dispatch it manually.
+4. The default Pages build targets `https://api.gitorc.org` for gateway traffic.
+5. Let the Pages workflow run on `main` or dispatch it manually.
+
+If you host the gateway somewhere else, update `VITE_GITORC_GATEWAY_URL` in `.github/workflows/jekyll-gh-pages.yml` before deploying.
 
 ### Important owner rule
 

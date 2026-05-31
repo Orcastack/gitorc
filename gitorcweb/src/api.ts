@@ -147,9 +147,29 @@ export type Overview = {
 };
 
 const configuredGatewayBase = import.meta.env.VITE_GITORC_GATEWAY_URL;
-const gatewayCandidates = configuredGatewayBase
-  ? [configuredGatewayBase]
-  : ['http://localhost:8080', 'http://localhost:18080'];
+const publicGatewayBase = 'https://api.gitorc.org';
+
+function isLocalHostname(hostname: string) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+}
+
+function resolveGatewayCandidates() {
+  if (configuredGatewayBase) {
+    return [configuredGatewayBase];
+  }
+
+  if (typeof window === 'undefined') {
+    return ['http://localhost:8080', 'http://localhost:18080'];
+  }
+
+  if (isLocalHostname(window.location.hostname)) {
+    return ['http://localhost:8080', 'http://localhost:18080'];
+  }
+
+  return Array.from(new Set([window.location.origin, publicGatewayBase]));
+}
+
+const gatewayCandidates = resolveGatewayCandidates();
 
 let lastResolvedGatewayBase = gatewayCandidates[0];
 
