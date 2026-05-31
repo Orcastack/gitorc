@@ -41,21 +41,21 @@ pipelines:
           services:
             - docker
           script:
-            - docker build -t atonixdev/profile-backend:$BITBUCKET_COMMIT ./backend
-            - docker build -t atonixdev/profile-backend:latest ./backend
+            - docker build -t gitorc/profile-backend:$BITBUCKET_COMMIT ./backend
+            - docker build -t gitorc/profile-backend:latest ./backend
             - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-            - docker push atonixdev/profile-backend:$BITBUCKET_COMMIT
-            - docker push atonixdev/profile-backend:latest
+            - docker push gitorc/profile-backend:$BITBUCKET_COMMIT
+            - docker push gitorc/profile-backend:latest
       - step:
           name: Build Frontend Docker Image
           services:
             - docker
           script:
-            - docker build -t atonixdev/profile-frontend:$BITBUCKET_COMMIT ./frontend
-            - docker build -t atonixdev/profile-frontend:latest ./frontend
+            - docker build -t gitorc/profile-frontend:$BITBUCKET_COMMIT ./frontend
+            - docker build -t gitorc/profile-frontend:latest ./frontend
             - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-            - docker push atonixdev/profile-frontend:$BITBUCKET_COMMIT
-            - docker push atonixdev/profile-frontend:latest
+            - docker push gitorc/profile-frontend:$BITBUCKET_COMMIT
+            - docker push gitorc/profile-frontend:latest
       - step:
           name: Deploy to Production
           deployment: production
@@ -69,8 +69,8 @@ pipelines:
                 SSH_KEY: $SSH_PRIVATE_KEY
                 COMMAND: |
                   cd /app/profile
-                  docker pull atonixdev/profile-backend:latest
-                  docker pull atonixdev/profile-frontend:latest
+                  docker pull gitorc/profile-backend:latest
+                  docker pull gitorc/profile-frontend:latest
                   docker-compose up -d
     develop:
       - step:
@@ -101,11 +101,11 @@ pipelines:
           services:
             - docker
           script:
-            - docker build -t atonixdev/profile-backend:develop ./backend
-            - docker build -t atonixdev/profile-frontend:develop ./frontend
+            - docker build -t gitorc/profile-backend:develop ./backend
+            - docker build -t gitorc/profile-frontend:develop ./frontend
             - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-            - docker push atonixdev/profile-backend:develop
-            - docker push atonixdev/profile-frontend:develop
+            - docker push gitorc/profile-backend:develop
+            - docker push gitorc/profile-frontend:develop
       - step:
           name: Deploy to Staging
           deployment: staging
@@ -118,8 +118,8 @@ pipelines:
                 SSH_KEY: $SSH_PRIVATE_KEY
                 COMMAND: |
                   cd /app/profile
-                  docker pull atonixdev/profile-backend:develop
-                  docker pull atonixdev/profile-frontend:develop
+                  docker pull gitorc/profile-backend:develop
+                  docker pull gitorc/profile-frontend:develop
                   docker-compose up -d
 
 definitions:

@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/config"
-	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/security"
+	"github.com/gitorc/gitorcapi/internal/platform/config"
+	"github.com/gitorc/gitorcapi/internal/platform/security"
 )
 
 const (

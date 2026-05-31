@@ -197,13 +197,13 @@ func data() Overview {
 	repositories := []Repository{
 		{ID: "core-platform", ProviderID: "gitorc", Name: "core-platform", Branch: "main", DefaultBranch: "main", Commit: "9b3f8e2", LastCommitAt: now, Reviewer: "orca:agent:1b4e28ba-2fa1-41d2-883f-0016d3cca427", Summary: "Gateway hardening, policy routing, signed deployments", CloneURL: "ssh://git@gitorc.local/core-platform.git", Identity: "orca:repo:3f6d8c3e-6c96-4d8c-a2d3-6f4a8f4b7f2a", Security: SecurityState{LDAPRegistered: true, RBACVerified: true, AttestationSigned: true, Verified: true}},
 		{ID: "review-automation", ProviderID: "gitlab", Name: "review-automation", Branch: "feature/transform-lane", DefaultBranch: "main", Commit: "4ad09d1", LastCommitAt: now, Reviewer: "orca:agent:550e8400-e29b-41d4-a716-446655440000", Summary: "Review policy templates and transform pipeline orchestration", CloneURL: "ssh://git@gitlab.local/review-automation.git", Identity: "orca:repo:cb234836-95bd-4d49-bd3a-4504227a8a3a", Security: SecurityState{LDAPRegistered: true, RBACVerified: true, AttestationSigned: true, Verified: true}},
-		{ID: "container-fabric", ProviderID: "github", Name: "container-fabric", Branch: "release/0.4", DefaultBranch: "main", Commit: "2c4b6a7", LastCommitAt: now, Reviewer: "orca:service:9c858901-8a57-4791-81fe-4c455b099bc9", Summary: "Runtime graphs, signed manifests, cluster rollout controls", CloneURL: "ssh://git@github.com/atonixdev/container-fabric.git", Identity: "orca:repo:1d74523b-4d56-4442-90d4-5256d0f8777a", Security: SecurityState{LDAPRegistered: true, RBACVerified: false, AttestationSigned: true, Verified: false}},
+		{ID: "container-fabric", ProviderID: "github", Name: "container-fabric", Branch: "release/0.4", DefaultBranch: "main", Commit: "2c4b6a7", LastCommitAt: now, Reviewer: "orca:service:9c858901-8a57-4791-81fe-4c455b099bc9", Summary: "Runtime graphs, signed manifests, cluster rollout controls", CloneURL: "ssh://git@github.com/gitorc/container-fabric.git", Identity: "orca:repo:1d74523b-4d56-4442-90d4-5256d0f8777a", Security: SecurityState{LDAPRegistered: true, RBACVerified: false, AttestationSigned: true, Verified: false}},
 	}
 
 	cloneOperations := []CloneOperation{
 		{RepositoryID: "core-platform", Status: "completed", CloneURL: "ssh://git@gitorc.local/core-platform.git", Command: "rycli clone core-platform", UPI: "orca:process:0ecf2d45-6be6-4c3d-b6d7-2f0831e8c101", UpdatedAt: now},
 		{RepositoryID: "review-automation", Status: "running", CloneURL: "ssh://git@gitlab.local/review-automation.git", Command: "rycli clone review-automation", UPI: "orca:process:e346f61c-40c6-4434-94ef-b2410890b8ef", UpdatedAt: now},
-		{RepositoryID: "container-fabric", Status: "failed", CloneURL: "ssh://git@github.com/atonixdev/container-fabric.git", Command: "rycli clone container-fabric", UPI: "orca:process:3eb6ddc8-a829-4b8d-b791-9cf0d1d4c43a", UpdatedAt: now},
+		{RepositoryID: "container-fabric", Status: "failed", CloneURL: "ssh://git@github.com/gitorc/container-fabric.git", Command: "rycli clone container-fabric", UPI: "orca:process:3eb6ddc8-a829-4b8d-b791-9cf0d1d4c43a", UpdatedAt: now},
 	}
 
 	reviews := []Review{

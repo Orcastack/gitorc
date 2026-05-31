@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/security"
+	"github.com/gitorc/gitorcapi/internal/platform/security"
 )
 
 func main() {

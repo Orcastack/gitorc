@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package gitorc.platform.v1;
 
-option go_package = "github.com/atonixdev/gitorc/gitorcapi/proto/gitorc/platform/v1;platformv1";
+option go_package = "github.com/gitorc/gitorcapi/proto/gitorc/platform/v1;platformv1";
 
 message Repository {
   string id = 1;

@@ -33,7 +33,7 @@ To publish successfully:
 
 The site host comes from the GitHub owner, not from the repository contents. For example:
 
-- `atonixdev/gitorc` publishes under `https://atonixdev.github.io/gitorc/`
+- `gitorc/gitorc` publishes under `https://gitorc.github.io/gitorc/`
 - `atonixcorp/gitorc` publishes under `https://atonixcorp.github.io/gitorc/`
 
 ## Docker Compose

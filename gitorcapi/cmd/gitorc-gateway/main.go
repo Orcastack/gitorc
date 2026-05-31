@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/atonixdev/gitorc/gitorcapi/internal/gatewayapi"
-	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/app"
-	"github.com/atonixdev/gitorc/gitorcapi/internal/platform/config"
+	"github.com/gitorc/gitorcapi/internal/gatewayapi"
+	"github.com/gitorc/gitorcapi/internal/platform/app"
+	"github.com/gitorc/gitorcapi/internal/platform/config"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/atonixdev/gitorc/gitorcapi
+module github.com/gitorc/gitorcapi
 
 go 1.24.0
 
