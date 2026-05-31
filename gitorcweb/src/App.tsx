@@ -465,7 +465,6 @@ const landingSidebarGroups: LandingSidebarGroup[] = [
 
 const landingHeaderLinks: LandingHeaderLink[] = [
   { label: 'Platform', icon: 'control-panel', publicPage: 'platform', targetId: 'platform-overview' },
-  { label: 'Repository', icon: 'repository', targetId: 'repository-role', publicPage: 'platform' },
   { label: 'Docs', icon: 'docs', targetId: 'docs-inventory', publicPage: 'platform' },
   { label: 'Community', icon: 'community', targetId: 'developer-community', publicPage: 'platform' },
   { label: 'Login', icon: 'login', publicPage: 'signin' },
@@ -2345,7 +2344,6 @@ export function App() {
             <p className="lede">A clean operator platform for repositories, pipelines, RBAC-governed access, and cloud deployment workflows across Proxmox, OpenStack, Kubernetes, Rancher, networking, and observability.</p>
             <div className="landing-hero-actions">
               <a className="button button-ghost" href="https://github.com/AtonixCorp/gitorc" rel="noreferrer" target="_blank">Open repository</a>
-              <button className="button button-primary" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
             </div>
           </article>
         </section>
@@ -2433,9 +2431,6 @@ export function App() {
                   <p className="eyebrow">{activeLandingGroup?.label || 'Developer platform overview'}</p>
                   <h1>{activeLandingPageDefinition.title}</h1>
                   <p className="lede">{activeLandingPageDefinition.intro}</p>
-                </div>
-                <div className="landing-page-actions">
-                  <button className="button button-primary" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
                 </div>
               </div>
               <div className="landing-page-sections">
