@@ -1,0 +1,12 @@
+environment: dev
+cluster: gitorc-dev
+namespace: gitorc-system
+strategy: rolling
+promotionRules:
+  requireSuccessfulPipeline: true
+  requireSignedArtifacts: true
+  requireReviewApproval: false
+  requireIdentityBinding: true
+rollback:
+  enabled: true
+  mode: revision

@@ -1,0 +1,17 @@
+region                        = "RegionOne"
+auth_url                      = "https://keystone.internal.example:5000/v3"
+application_credential_id     = "replace-me"
+application_credential_secret = "replace-me"
+tenant_name                   = "gitorc-platform"
+user_name                     = "gitorc-terraform"
+kube_host                     = "https://k8s.internal.example:6443"
+kube_token                    = "replace-me"
+kube_cluster_ca_certificate   = "-----BEGIN CERTIFICATE-----\nreplace-me\n-----END CERTIFICATE-----"
+external_network_id           = "replace-me"
+image_name                    = "ubuntu-22.04-gitorc-runner"
+runner_flavor_name            = "c4.4xlarge"
+runner_keypair                = "gitorc-private-cloud"
+runner_instance_count         = 3
+floating_ip_pool              = "public"
+barbican_secret_payload       = "placeholder-secret"
+storage_ceph_monitors         = ["10.20.0.15:6789", "10.20.0.16:6789", "10.20.0.17:6789"]

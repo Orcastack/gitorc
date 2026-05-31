@@ -1,0 +1,29 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: gitorc-verify-attestations
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: require-signed-gitorc-images
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - gitorc-system
+      verifyImages:
+        - imageReferences:
+            - "registry.internal.example/gitorc/*"
+          attestors:
+            - count: 1
+              entries:
+                - keys:
+                    publicKeys: |-
+                      -----BEGIN PUBLIC KEY-----
+                      REPLACE_WITH_PLATFORM_SIGNING_KEY
+                      -----END PUBLIC KEY-----
+          mutateDigest: true
+          required: true

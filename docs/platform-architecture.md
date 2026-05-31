@@ -1,37 +1,52 @@
 # gitorc platform architecture
 
-## Core flow
+## System shape
 
-1. A developer pushes code into the Git Service.
-2. Git Service emits an event for branch updates or review uploads.
-3. Review Service creates or updates a Change and evaluates rules.
-4. CI Service runs `.gitorc-ci.yml`, streams logs into HBase, and stores artifacts in HDFS.
-5. CD Service promotes successful artifacts into target environments.
-6. Analytics Service computes risk, quality, and productivity insights from the event and log stream.
+GITORC is a governed automation platform that links repository state, pipeline execution, signed artifacts, deployment promotion, and runtime policy in one private-cloud control plane.
 
-## Storage model
+## End-to-end flow
 
-- Postgres: users, projects, repositories, changes, pipelines, deployments, rules.
-- HBase: CI logs, inline comments, audit events, and high-volume activity streams.
-- HDFS: artifacts, archived logs, and analytics job inputs/outputs.
-- Filesystem: bare Git repositories under `infra/git/repos` locally, later movable to dedicated storage.
+1. A developer pushes code into the Git service.
+2. Review and repository policy bind the change to developer identity and repository governance.
+3. CI runs build, test, package, and signing stages using dedicated private-cloud runners.
+4. Signed artifacts are checked against runtime policy before promotion.
+5. CD deploys approved revisions into dev, stage, and prod environments on private Kubernetes clusters.
+6. Monitoring, logging, and audit records remain attached to the same repository and pipeline identity chain.
 
-## Internal contracts
+## Architecture diagram
 
-The initial gRPC surface is declared in `gitorcapi/proto/gitorc/platform/v1/platform.proto` and includes:
+```mermaid
+flowchart LR
+	Dev[Developer] --> Repo[Git Service]
+	Repo --> Review[Review Service]
+	Review --> CI[CI Service]
+	CI --> Sign[Artifact Signing]
+	Sign --> Policy[OPA and Kyverno Policy]
+	Policy --> CD[CD Service]
+	CD --> K8s[Private Kubernetes]
+	CD --> OS[OpenStack Foundation]
+	K8s --> Obs[Monitoring and Logging]
+	OS --> ID[Keystone Identity]
+	ID --> Repo
+	ID --> CI
+```
 
-- Repository creation and listing
-- Refs and commit queries
-- File and diff retrieval
-- Review change upsert and voting
-- Pipeline start
-- Deployment start
-- Project analytics retrieval
+## Infrastructure layers
 
-## Recommended next delivery slices
+- OpenStack provides networks, routers, floating IPs, load-balancer ingress, Cinder-backed storage classes, runner compute pools, and Keystone identity.
+- Kubernetes runs the CI/CD control plane, ingress, runners, storage integration, monitoring, logging, and policy enforcement.
+- Postgres, Redpanda, HBase, and HDFS back metadata, events, and artifact/log persistence for local bootstrap and platform services.
 
-1. Implement repository initialization, ref listing, and commit inspection in `gitorc-git-service`.
-2. Persist changes and patchsets in `gitorc-review-service` using Postgres.
-3. Add an event publisher/consumer layer over Redpanda for `push_event`, `change_merged`, and `pipeline_finished`.
-4. Build a job runner in `gitorc-ci-service` that interprets `.gitorc-ci.yml`.
-5. Add HBase/HDFS adapters and analytics batch jobs.
+## Governance model
+
+- Every pipeline run is repository-linked and actor-linked.
+- Artifact promotion requires signed outputs.
+- Stage and production promotion require approval and policy evaluation.
+- Runtime admission rejects unsigned or unapproved workloads.
+
+## Key repo entry points
+
+- `infra/terraform/environments/private-cloud`: private-cloud provisioning.
+- `infra/kubernetes/platform`: cluster-level platform services.
+- `infra/policy`: attestation and runtime governance.
+- `.gitorc-ci.yml`: governed pipeline lanes.
