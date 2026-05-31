@@ -928,7 +928,6 @@ export function App() {
   const [projectDraft, setProjectDraft] = useState<ProjectDraft>(emptyProjectDraft);
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
   const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
-  const [landingQuery, setLandingQuery] = useState('');
   const [landingHeroPointer, setLandingHeroPointer] = useState({ x: 50, y: 50 });
   const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
   const [signupRequests, setSignupRequests] = useState<SignupRequestRecord[]>([]);
@@ -1276,34 +1275,6 @@ export function App() {
     }
 
     setActiveLandingPage(pageId);
-  };
-
-  const handleLandingSearch = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const query = landingQuery.trim().toLowerCase();
-    if (!query) {
-      selectLandingPage('platform-overview');
-      return;
-    }
-
-    const match = landingPages.find((page) => {
-      if (page.id === 'landing-overview') {
-        return false;
-      }
-      const sectionTitles = page.sections.map((section) => section.title).join(' ');
-      const sectionLinks = page.sections.flatMap((section) => (section.links || []).map((link) => link.label)).join(' ');
-      const haystack = [page.label, page.title, page.intro, sectionTitles, sectionLinks, ...page.searchTerms].join(' ').toLowerCase();
-      return haystack.includes(query);
-    });
-
-    if (!match) {
-      setToast(`No landing section matched "${landingQuery}".`);
-      return;
-    }
-
-    selectLandingPage(match.id);
-    setToast(`Opened ${match.label}.`);
   };
 
   const activeLandingPageDefinition = useMemo(
@@ -2572,17 +2543,15 @@ export function App() {
           </nav>
 
           <div className="landing-header-controls">
-            <form className="landing-search" onSubmit={handleLandingSearch}>
-              <span className="landing-search-icon"><LandingIcon icon="search" /></span>
-              <input
-                aria-label="Search landing sections"
-                onChange={(event) => setLandingQuery(event.target.value)}
-                placeholder="Search platform sections"
-                type="search"
-                value={landingQuery}
-              />
-              <button className="landing-control-button" type="submit">Search</button>
-            </form>
+            <a
+              aria-label="Open AtonixCorp on GitHub"
+              className="landing-icon-button"
+              href="https://github.com/AtonixCorp"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <LandingIcon icon="github" />
+            </a>
 
             <button
               aria-label="Toggle landing theme"
@@ -2662,17 +2631,15 @@ export function App() {
           </nav>
 
           <div className="landing-header-controls">
-            <form className="landing-search" onSubmit={handleLandingSearch}>
-              <span className="landing-search-icon"><LandingIcon icon="search" /></span>
-              <input
-                aria-label="Search platform pages"
-                onChange={(event) => setLandingQuery(event.target.value)}
-                placeholder="Search docs, workflows, support"
-                type="search"
-                value={landingQuery}
-              />
-              <button className="landing-control-button" type="submit">Search</button>
-            </form>
+            <a
+              aria-label="Open AtonixCorp on GitHub"
+              className="landing-icon-button"
+              href="https://github.com/AtonixCorp"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <LandingIcon icon="github" />
+            </a>
 
             <button
               aria-label="Toggle landing theme"
