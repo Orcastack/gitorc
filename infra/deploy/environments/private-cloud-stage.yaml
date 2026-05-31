@@ -1,0 +1,12 @@
+environment: stage
+cluster: gitorc-stage
+namespace: gitorc-system
+strategy: canary
+promotionRules:
+  requireSuccessfulPipeline: true
+  requireSignedArtifacts: true
+  requireReviewApproval: true
+  requireIdentityBinding: true
+rollback:
+  enabled: true
+  mode: revision

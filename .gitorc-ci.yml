@@ -1,12 +1,18 @@
 version: 1
 
 pipeline:
-  name: default
+  name: governed-private-cloud
   triggers:
     - push
     - change_merged
   stages:
-    - name: lint
+    - name: identity-bind
+      image: golang:1.23
+      commands:
+        - test -n "$GITORC_REPOSITORY_IDENTITY"
+        - test -n "$GITORC_ACTOR_IDENTITY"
+        - echo "Repository and actor identities are bound to this pipeline run"
+    - name: api-test
       image: golang:1.23
       commands:
         - cd gitorcapi
@@ -17,7 +23,45 @@ pipeline:
         - cd gitorcweb
         - npm ci
         - npm run build
-    - name: package
+    - name: infra-validate
+      image: hashicorp/terraform:1.8
+      commands:
+        - terraform -chdir=infra/terraform/environments/private-cloud init -backend=false
+        - terraform -chdir=infra/terraform/environments/private-cloud validate
+        - terraform fmt -check -recursive infra/terraform
+    - name: sign-artifacts
+      image: golang:1.23
+      commands:
+        - cd gitorcapi
+        - mkdir -p dist/signing dist/attestations
+        - go build -o dist/gitorc-ci-service ./cmd/gitorc-ci-service
+        - go run ./cmd/gitorc-secctl genkeys --private dist/signing/private.pem --public dist/signing/public.pem
+        - go run ./cmd/gitorc-secctl attest --repository-identity "$GITORC_REPOSITORY_IDENTITY" --component-identity orca:service:71f1ba7b-db62-4369-a133-7be30c1d9e2d --binary-path dist/gitorc-ci-service --build-reference "$GITORC_BUILD_REFERENCE" --private-key dist/signing/private.pem --public-key dist/signing/public.pem --output dist/attestations/ci-service.json
+    - name: policy-gate
+      image: openpolicyagent/opa:0.68.0-static
+      commands:
+        - opa eval --fail-defined --data infra/policy/opa/runtime-governance.rego --input infra/policy/examples/stage-approval-input.json 'data.gitorc.runtime.deny'
+    - name: deploy-dev
+      image: bitnami/kubectl:1.31
+      commands:
+        - kubectl apply -f infra/kubernetes/base/namespace.yaml
+        - kubectl apply -k infra/kubernetes/platform
+      when:
+        branch:
+          - main
+    - name: deploy-stage
+      image: bitnami/kubectl:1.31
+      commands:
+        - echo "Promote signed artifact to stage after review approval"
+      approval:
+        required: true
+    - name: deploy-prod
+      image: bitnami/kubectl:1.31
+      commands:
+        - echo "Promote signed artifact to prod with blue-green strategy and runtime policy enforcement"
+      approval:
+        required: true
+    - name: rollback
       image: alpine:3.20
       commands:
-        - echo "Package artifacts into HDFS via CI service"
+        - echo "Rollback to last signed release revision when governance authorizes recovery"

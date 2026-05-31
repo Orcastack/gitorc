@@ -1,5 +1,7 @@
 stages:
   - validate
+  - package
+  - govern
 
 variables:
   GIT_STRATEGY: clone
@@ -15,6 +17,16 @@ api-build:
     - merge_requests
     - main
 
+api-test:
+  stage: validate
+  image: golang:1.23
+  script:
+    - cd gitorcapi
+    - go test ./...
+  only:
+    - merge_requests
+    - main
+
 web-build:
   stage: validate
   image: node:20-alpine
@@ -26,6 +38,39 @@ web-build:
     paths:
       - gitorcweb/dist/
     expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+
+infra-validate:
+  stage: validate
+  image: hashicorp/terraform:1.8
+  script:
+    - terraform -chdir=infra/terraform/environments/private-cloud init -backend=false
+    - terraform -chdir=infra/terraform/environments/private-cloud validate
+    - terraform fmt -check -recursive infra/terraform
+  only:
+    - merge_requests
+    - main
+
+artifact-sign:
+  stage: package
+  image: golang:1.23
+  script:
+    - cd gitorcapi
+    - mkdir -p dist/signing dist/attestations
+    - go build -o dist/gitorc-cd-service ./cmd/gitorc-cd-service
+    - go run ./cmd/gitorc-secctl genkeys --private dist/signing/private.pem --public dist/signing/public.pem
+    - go run ./cmd/gitorc-secctl attest --repository-identity "$GITORC_REPOSITORY_IDENTITY" --component-identity orca:service:dd3490dc-e08d-43bb-abaf-2874e46ad7ec --binary-path dist/gitorc-cd-service --build-reference "${CI_COMMIT_SHA}:gitorc-cd-service" --private-key dist/signing/private.pem --public-key dist/signing/public.pem --output dist/attestations/cd-service.json
+  only:
+    - merge_requests
+    - main
+
+policy-gate:
+  stage: govern
+  image: openpolicyagent/opa:0.68.0-static
+  script:
+    - opa eval --fail-defined --data infra/policy/opa/runtime-governance.rego --input infra/policy/examples/prod-approval-input.json 'data.gitorc.runtime.deny'
   only:
     - merge_requests
     - main

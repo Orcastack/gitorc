@@ -1,20 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import {
-  fetchSession,
   fetchOverview,
   getGatewayBase,
+  importRepository,
   isStaticOverviewMode,
-  login,
-  logout,
-  type AuthSession,
   type CloneOperation,
   type Container,
   type Deployment,
   type EventEntry,
+  type ImportRepositoryInput,
   type Overview,
   type Pipeline,
   type Repository,
+  type RepositoryMutationResult,
   type Review,
   type SecurityState,
 } from './api';
@@ -635,30 +634,7 @@ type FocusState =
   | { kind: 'deployment'; id: string }
   | { kind: 'process'; id: string };
 
-type PublicPage = 'home' | 'platform' | 'signin';
-
-const authTokenStorageKey = 'gitorc.auth.token';
-
-function readStoredAuthToken() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  return window.localStorage.getItem(authTokenStorageKey);
-}
-
-function storeAuthToken(token: string | null) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  if (!token) {
-    window.localStorage.removeItem(authTokenStorageKey);
-    return;
-  }
-
-  window.localStorage.setItem(authTokenStorageKey, token);
-}
+type PublicPage = 'home' | 'signin';
 
 function readPublicPage(): PublicPage {
   if (typeof window === 'undefined') {
@@ -733,6 +709,22 @@ function securityLabel(security: SecurityState) {
   return security.verified ? 'verified' : 'attention required';
 }
 
+function hasWorkspaceData(overview: Overview | null) {
+  if (!overview) {
+    return false;
+  }
+
+  return [
+    overview.providers.length,
+    overview.repositories.length,
+    overview.reviews.length,
+    overview.pipelines.length,
+    overview.deployments.length,
+    overview.containers.length,
+    overview.events.length,
+  ].some((count) => count > 0);
+}
+
 export function App() {
   const publicLandingMode = isStaticOverviewMode();
   const [route, setRoute] = useState<RouteState>(() => readRoute());
@@ -751,9 +743,23 @@ export function App() {
   const [eventKindFilter, setEventKindFilter] = useState<'all' | 'repository' | 'pipeline' | 'deployment' | 'process'>('all');
   const [eventRepositoryFilter, setEventRepositoryFilter] = useState<string>('all');
   const [activeGatewayBase, setActiveGatewayBase] = useState(getGatewayBase());
+<<<<<<< HEAD
+  const [projectFormMode, setProjectFormMode] = useState<ProjectFormMode>('closed');
+  const [projectDraft, setProjectDraft] = useState<ProjectDraft>(emptyProjectDraft);
+  const [isSubmittingProject, setIsSubmittingProject] = useState(false);
+  const workspaceHasData = hasWorkspaceData(overview);
+
+  const loadOverview = async (signal?: AbortSignal) => {
+    const payload = await fetchOverview(signal);
+    setOverview(payload);
+    setActiveGatewayBase(getGatewayBase());
+    setError(null);
+    return payload;
+  };
+=======
   const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
   const [landingQuery, setLandingQuery] = useState('');
-  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>(() => readLandingPageFromHash());
+  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
 
   useEffect(() => {
     const onHashChange = () => {
@@ -828,7 +834,7 @@ export function App() {
       };
     }
 
-    const loadOverview = async () => {
+    const refresh = async () => {
       try {
         const payload = await fetchOverview(undefined, authSession.token);
         if (!active) {
@@ -859,9 +865,9 @@ export function App() {
       }
     };
 
-    void loadOverview();
+    void refresh();
     interval = window.setInterval(() => {
-      void loadOverview();
+      void refresh();
     }, 8000);
 
     return () => {
@@ -1182,17 +1188,78 @@ export function App() {
     }
   };
 
-  const handleRepositoryAction = async (repository: Repository, operation: CloneOperation | null, action: 'clone' | 'rycli' | 'review') => {
-    setFocus({ kind: 'repository', id: repository.id });
-    navigateTo('repositories', repository.id);
+  const pushCommandForRepository = (repository: Repository, operation: CloneOperation | null) => {
+    const remote = operation?.clone_url || repository.clone_url;
+    return `git remote add origin ${remote} && git push -u origin ${repository.default_branch}`;
+  };
 
-    if (action === 'clone' && operation) {
-      await copyText(operation.clone_url, 'Clone URL');
+  const openProjectForm = (mode: ProjectFormMode) => {
+    setProjectFormMode(mode);
+    setProjectDraft(emptyProjectDraft);
+  };
+
+  const closeProjectForm = () => {
+    setProjectFormMode('closed');
+    setProjectDraft(emptyProjectDraft);
+  };
+
+  const handleProjectFieldChange = (field: keyof ProjectDraft, value: string) => {
+    setProjectDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const handleProjectSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (projectFormMode === 'closed') {
       return;
     }
 
-    if (action === 'rycli' && operation) {
-      await copyText(operation.command, 'RYCLI command');
+    setIsSubmittingProject(true);
+    try {
+      let result: RepositoryMutationResult;
+      if (projectFormMode === 'create') {
+        const payload: CreateRepositoryInput = {
+          name: projectDraft.name,
+          summary: projectDraft.summary,
+          defaultBranch: projectDraft.defaultBranch,
+        };
+        result = await createRepository(payload);
+      } else {
+        const payload: ImportRepositoryInput = {
+          name: projectDraft.name,
+          summary: projectDraft.summary,
+          defaultBranch: projectDraft.defaultBranch,
+          sourceUrl: projectDraft.sourceUrl,
+        };
+        result = await importRepository(payload);
+      }
+
+      await loadOverview();
+      setFocus({ kind: 'repository', id: result.repository.id });
+      navigateTo('repositories', result.repository.id);
+      closeProjectForm();
+      setToast(projectFormMode === 'create' ? `Project ${result.repository.name} created.` : `Repository ${result.repository.name} imported.`);
+    } catch (submitError) {
+      setToast(submitError instanceof Error ? submitError.message : 'Project operation failed.');
+    } finally {
+      setIsSubmittingProject(false);
+    }
+  };
+
+  const handleRepositoryAction = async (repository: Repository, operation: CloneOperation | null, action: 'clone' | 'push' | 'review') => {
+    setFocus({ kind: 'repository', id: repository.id });
+    navigateTo('repositories', repository.id);
+
+    if (action === 'clone') {
+      await copyText(`git clone ${operation?.clone_url || repository.clone_url}`, 'Clone command');
+      return;
+    }
+
+    if (action === 'push') {
+      await copyText(pushCommandForRepository(repository, operation), 'Push command');
       return;
     }
 
@@ -1202,26 +1269,26 @@ export function App() {
     }
   };
 
-  const handlePipelineAction = (pipeline: Pipeline, action: 'run' | 'history' | 'logs') => {
+  const handlePipelineAction = (pipeline: Pipeline, action: 'overview' | 'history' | 'logs') => {
     setFocus({ kind: 'pipeline', id: pipeline.id });
     navigateTo('pipelines', pipeline.repository_id);
     setToast(
-      action === 'run'
-        ? `Pipeline ${pipeline.name} armed for manual run.`
+      action === 'overview'
+        ? `Showing pipeline summary for ${pipeline.name}.`
         : action === 'history'
           ? `Showing run history for ${pipeline.name}.`
           : `Log channel: ${pipeline.log_channel}`,
     );
   };
 
-  const handleDeploymentAction = (deployment: Deployment, action: 'deploy' | 'rollback' | 'details') => {
+  const handleDeploymentAction = (deployment: Deployment, action: 'details' | 'history' | 'logs') => {
     setFocus({ kind: 'deployment', id: deployment.id });
     navigateTo('deployments', deployment.repository_id);
     setToast(
-      action === 'deploy'
-        ? `Deploy target ${deployment.target_commit} selected for ${deployment.environment}.`
-        : action === 'rollback'
-          ? `Rollback target ${deployment.previous_version} selected for ${deployment.service_name}.`
+      action === 'details'
+        ? `Showing release details for ${deployment.service_name}.`
+        : action === 'history'
+          ? `Showing release history for ${deployment.service_name}.`
           : `Deployment channel: ${deployment.log_channel}`,
     );
   };
@@ -1281,7 +1348,7 @@ export function App() {
                   </div>
                   <div className="action-row">
                     <button className="button button-primary" onClick={() => void handleRepositoryAction(repository, operation, 'clone')} type="button">Clone</button>
-                    <button className="button button-ghost" onClick={() => void handleRepositoryAction(repository, operation, 'rycli')} type="button">Open in RYCLI</button>
+                    <button className="button button-ghost" onClick={() => void handleRepositoryAction(repository, operation, 'push')} type="button">Push</button>
                     <button className="button button-ghost" onClick={() => void handleRepositoryAction(repository, operation, 'review')} type="button">Open review</button>
                   </div>
                 </article>
@@ -1290,11 +1357,12 @@ export function App() {
           </div>
 
           <article className="trace-card detail-card">
-            <p className="section-kicker">Selected clone intent</p>
+            <p className="section-kicker">Selected repository remote</p>
             <h3>{selectedRepository.name}</h3>
             <ul>
               <li>Clone URL: {selectedClone?.clone_url || selectedRepository.clone_url}</li>
-              <li>RYCLI command: {selectedClone?.command || `rycli clone ${selectedRepository.id}`}</li>
+              <li>Clone command: {selectedClone?.command || `git clone ${selectedRepository.clone_url}`}</li>
+              <li>Push command: {pushCommandForRepository(selectedRepository, selectedClone)}</li>
               <li>Status: {formatStatus(selectedClone?.status || 'pending')}</li>
               <li>UPI: {selectedClone?.upi || selectedRepository.identity}</li>
               <li>Default branch: {selectedRepository.default_branch}</li>
@@ -1314,19 +1382,20 @@ export function App() {
       <section className="gitlab-shell">
         <aside className="gitlab-sidebar panel">
           <div className="sidebar-group">
-            <p className="section-kicker">Projects</p>
-            <button className="button button-primary sidebar-button" onClick={() => setToast('Create project flow staged through the gateway control plane.')} type="button">
-              Create project
-            </button>
-            <button className="button button-ghost sidebar-button" onClick={() => navigateTo('repositories', selectedRepository.id)} type="button">
-              Import repository
-            </button>
-            <button className="button button-ghost sidebar-button" onClick={() => navigateTo('reviews', selectedRepository.id)} type="button">
-              Open review queue
-            </button>
+            <p className="section-kicker">Workspace sections</p>
+            {routeTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`button ${route.name === tab.id ? 'button-primary' : 'button-ghost'} sidebar-button`}
+                onClick={() => navigateTo(tab.id, selectedRepository.id)}
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
           <div className="sidebar-group">
-            <p className="section-kicker">Your projects</p>
+            <p className="section-kicker">Tracked projects</p>
             <div className="project-nav-list">
               {overview.repositories.map((repository) => (
                 <button
@@ -1352,23 +1421,22 @@ export function App() {
               <p className="eyebrow">gitorc dashboard</p>
               <h2>Projects, delivery, runtime, and trust in one control plane</h2>
               <p className="lede">The overview now behaves like a project operations home: create projects, inspect repositories, run CI, deploy builds, and trace every action through its signed identity chain.</p>
-              {authSession ? (
-                <div className="dashboard-operator-strip">
-                  <span className="identity-chip">{authSession.user.role}</span>
-                  <span>{authSession.user.full_name}</span>
-                  <span>{authSession.user.rbac_realm}</span>
-                </div>
-              ) : null}
             </div>
             <div className="header-actions">
-              <button className="button button-primary" onClick={() => setToast('Create project requests will be sent through the gateway when mutation endpoints are enabled.')} type="button">
-                New project
+              <button className="button button-primary" onClick={() => openProjectForm('create')} type="button">
+                Create project
+              </button>
+              <button className="button button-ghost" onClick={() => openProjectForm('import')} type="button">
+                Import Git repository
+              </button>
+              <button className="button button-primary" onClick={() => navigateTo('repositories', selectedRepository.id)} type="button">
+                Repositories
               </button>
               <button className="button button-ghost" onClick={() => navigateTo('pipelines', selectedRepository.id)} type="button">
-                Run pipeline
+                Pipelines
               </button>
               <button className="button button-ghost" onClick={() => navigateTo('deployments', selectedRepository.id)} type="button">
-                Deploy build
+                Deployments
               </button>
               {authSession ? (
                 <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
@@ -1408,9 +1476,9 @@ export function App() {
             <div className="section-heading">
               <div>
                 <p className="section-kicker">Project inventory</p>
-                <h2>Repositories & clone operations</h2>
+                <h2>Repositories and gateway actions</h2>
               </div>
-              <span className="status-badge status-primary">Gateway source: {activeGatewayBase}</span>
+              <span className="status-badge status-primary">Updated {formatTime(overview.updated_at)}</span>
             </div>
 
             <div className="table-shell">
@@ -1437,7 +1505,7 @@ export function App() {
                     <span className={`mini-badge ${statusClass(operation?.status || 'pending')}`}>{formatStatus(operation?.status || 'pending')}</span>
                     <div className="table-actions">
                       <button className="button button-primary" onClick={() => void handleRepositoryAction(repository, operation, 'clone')} type="button">Clone</button>
-                      <button className="button button-ghost" onClick={() => void handleRepositoryAction(repository, operation, 'rycli')} type="button">RYCLI</button>
+                      <button className="button button-ghost" onClick={() => void handleRepositoryAction(repository, operation, 'push')} type="button">Push</button>
                       <button className="button button-ghost" onClick={() => void handleRepositoryAction(repository, operation, 'review')} type="button">Review</button>
                     </div>
                   </div>
@@ -1469,8 +1537,8 @@ export function App() {
                     <span>{deployment.environment}</span>
                     <span className={`mini-badge ${statusClass(deployment.status)}`}>{formatStatus(deployment.status)}</span>
                     <div className="table-actions">
-                      <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'deploy')} type="button">Deploy</button>
-                      <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'rollback')} type="button">Rollback</button>
+                      <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'details')} type="button">Details</button>
+                      <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'logs')} type="button">Logs</button>
                     </div>
                   </div>
                 ))}
@@ -1502,7 +1570,7 @@ export function App() {
                     <span>{formatTime(pipeline.last_run)}</span>
                     <span className={`mini-badge ${statusClass(pipeline.status)}`}>{formatStatus(pipeline.status)}</span>
                     <div className="table-actions">
-                      <button className="button button-ghost" onClick={() => handlePipelineAction(pipeline, 'run')} type="button">Run</button>
+                      <button className="button button-ghost" onClick={() => handlePipelineAction(pipeline, 'overview')} type="button">Summary</button>
                       <button className="button button-ghost" onClick={() => handlePipelineAction(pipeline, 'logs')} type="button">Logs</button>
                     </div>
                   </div>
@@ -1676,8 +1744,8 @@ export function App() {
                   <span>{deployment.artifact}</span>
                 </div>
                 <div className="action-row">
-                  <button className="button button-primary" onClick={() => handleDeploymentAction(deployment, 'deploy')} type="button">Deploy new version</button>
-                  <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'rollback')} type="button">Rollback</button>
+                  <button className="button button-primary" onClick={() => handleDeploymentAction(deployment, 'details')} type="button">Release details</button>
+                  <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'history')} type="button">Release history</button>
                   <button className="button button-ghost" onClick={() => handleDeploymentAction(deployment, 'details')} type="button">Details</button>
                 </div>
               </article>
@@ -1731,7 +1799,7 @@ export function App() {
                   ))}
                 </div>
                 <div className="action-row">
-                  <button className="button button-primary" onClick={() => handlePipelineAction(pipeline, 'run')} type="button">Run pipeline</button>
+                  <button className="button button-primary" onClick={() => handlePipelineAction(pipeline, 'overview')} type="button">Pipeline summary</button>
                   <button className="button button-ghost" onClick={() => handlePipelineAction(pipeline, 'history')} type="button">Run history</button>
                   <button className="button button-ghost" onClick={() => handlePipelineAction(pipeline, 'logs')} type="button">Logs</button>
                 </div>
@@ -1837,9 +1905,8 @@ export function App() {
           <article className="trace-card">
             <h3>Global identities</h3>
             <ul>
-              <li>Repository identity: {overview.security.repository_identity}</li>
-              <li>UI process identity: {overview.security.ui_process_identity}</li>
-              <li>Gateway source: {activeGatewayBase}</li>
+              <li>Repository identity: {overview.security.repository_identity || 'Not reported yet'}</li>
+              <li>UI process identity: {overview.security.ui_process_identity || 'Not reported yet'}</li>
               <li>Updated at: {formatTime(overview.updated_at)}</li>
             </ul>
           </article>
@@ -1876,7 +1943,7 @@ export function App() {
         <div className="section-heading">
           <div>
             <p className="section-kicker">Logs / events stream</p>
-            <h2>System breathing in real time</h2>
+            <h2>Recent platform activity</h2>
           </div>
           <span className="status-badge status-primary">Polling every 8s</span>
         </div>
@@ -1920,6 +1987,163 @@ export function App() {
             </article>
           ))}
         </div>
+      </section>
+    );
+  };
+
+  const renderEmptyWorkspace = () => {
+    if (!overview) {
+      return null;
+    }
+
+    const setupMetrics = [
+      { label: 'Providers', value: String(overview.providers.length), hint: 'Connected' },
+      { label: 'Projects', value: String(overview.repositories.length), hint: 'Available' },
+      { label: 'Pipelines', value: String(overview.pipelines.length), hint: 'Tracked' },
+      { label: 'Events', value: String(overview.events.length), hint: 'Recorded' },
+    ];
+
+    return (
+      <section className="gitlab-shell">
+        <aside className="gitlab-sidebar panel">
+          <div className="sidebar-group">
+            <p className="section-kicker">Workspace</p>
+            <span className="status-badge status-primary">Gateway connected</span>
+            <button className="button button-primary sidebar-button" onClick={() => openProjectForm('create')} type="button">
+              Create project
+            </button>
+            <button className="button button-ghost sidebar-button" onClick={() => openProjectForm('import')} type="button">
+              Import Git repository
+            </button>
+          </div>
+        </aside>
+
+        <div className="gitlab-main">
+          <section className="gitlab-header panel">
+            <div>
+              <p className="eyebrow">operator workspace</p>
+              <h2>Start with a project</h2>
+            </div>
+            <div className="header-actions">
+              <button className="button button-primary" onClick={() => openProjectForm('create')} type="button">
+                Create project
+              </button>
+              <button className="button button-ghost" onClick={() => openProjectForm('import')} type="button">
+                Import Git repository
+              </button>
+              <span className="status-badge status-primary">Updated {formatTime(overview.updated_at)}</span>
+            </div>
+          </section>
+
+          <section className="metrics-grid metrics-grid-compact">
+            {setupMetrics.map((metric) => (
+              <article key={metric.label} className="metric-card metric-card-compact">
+                <p>{metric.label}</p>
+                <strong>{metric.value}</strong>
+                <span>{metric.hint}</span>
+              </article>
+            ))}
+          </section>
+
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">First use</p>
+                <h2>No projects yet</h2>
+              </div>
+            </div>
+            <div className="trace-grid">
+              <article className="trace-card">
+                <h3>Import</h3>
+                <p>Bring in an existing Git repository.</p>
+              </article>
+              <article className="trace-card">
+                <h3>Create</h3>
+                <p>Create a new remote and push your code.</p>
+              </article>
+              <article className="trace-card">
+                <h3>Operate</h3>
+                <p>Repositories and activity appear here after setup.</p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </section>
+    );
+  };
+
+  const renderProjectForm = () => {
+    if (publicLandingMode || projectFormMode === 'closed') {
+      return null;
+    }
+
+    const title = projectFormMode === 'create' ? 'Create project' : 'Import Git repository';
+    const description = projectFormMode === 'create'
+      ? 'Create a new bare Git repository in the local gitorc store. After creation you can clone it and push your project into it.'
+      : 'Mirror an existing Git remote into the local gitorc store so the dashboard can manage clone and push access locally.';
+
+    return (
+      <section className="panel stack-panel form-panel">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">Project control</p>
+            <h2>{title}</h2>
+          </div>
+          <span className="status-badge status-primary">Gateway: {activeGatewayBase}</span>
+        </div>
+        <p>{description}</p>
+        <form className="project-form" onSubmit={handleProjectSubmit}>
+          <div className="form-grid">
+            <label className="form-field">
+              <span>Project name</span>
+              <input
+                onChange={(event) => handleProjectFieldChange('name', event.target.value)}
+                placeholder={projectFormMode === 'import' ? 'Optional, inferred from remote if empty' : 'example-project'}
+                required={projectFormMode === 'create'}
+                type="text"
+                value={projectDraft.name}
+              />
+            </label>
+            <label className="form-field">
+              <span>Default branch</span>
+              <input
+                onChange={(event) => handleProjectFieldChange('defaultBranch', event.target.value)}
+                placeholder="main"
+                type="text"
+                value={projectDraft.defaultBranch}
+              />
+            </label>
+            {projectFormMode === 'import' ? (
+              <label className="form-field form-field-wide">
+                <span>Source Git URL</span>
+                <input
+                  onChange={(event) => handleProjectFieldChange('sourceUrl', event.target.value)}
+                  placeholder="https://github.com/owner/repository.git"
+                  required
+                  type="text"
+                  value={projectDraft.sourceUrl}
+                />
+              </label>
+            ) : null}
+            <label className="form-field form-field-wide">
+              <span>Summary</span>
+              <textarea
+                onChange={(event) => handleProjectFieldChange('summary', event.target.value)}
+                placeholder="Short description for the dashboard"
+                rows={3}
+                value={projectDraft.summary}
+              />
+            </label>
+          </div>
+          <div className="project-form-actions">
+            <button className="button button-primary" disabled={isSubmittingProject} type="submit">
+              {isSubmittingProject ? 'Working…' : title}
+            </button>
+            <button className="button button-ghost" onClick={closeProjectForm} type="button">
+              Cancel
+            </button>
+          </div>
+        </form>
       </section>
     );
   };
@@ -2085,6 +2309,37 @@ export function App() {
                   <button className="button button-ghost" onClick={() => navigatePublic('platform', 'discord-channels')} type="button">Join community</button>
                 </div>
               </div>
+<<<<<<< HEAD
+            </div>
+            <div className="trace-grid">
+              <article className="trace-card">
+                <h3>Repository control</h3>
+                <ul>
+                  <li>Connected providers and repository inventory.</li>
+                  <li>Clone commands, push remotes, and review entrypoints.</li>
+                  <li>Commit and branch context tied to identity records.</li>
+                </ul>
+              </article>
+              <article className="trace-card">
+                <h3>Delivery orchestration</h3>
+                <ul>
+                  <li>Pipeline lanes with run history and gating state.</li>
+                  <li>Deployment lanes with rollback targets and artifact traceability.</li>
+                  <li>Environment and cluster rollout visibility.</li>
+                </ul>
+              </article>
+              <article className="trace-card">
+                <h3>Runtime trust</h3>
+                <ul>
+                  <li>Process identity, LDAP registration, RBAC verification.</li>
+                  <li>Attestation status for repositories, pipelines, and services.</li>
+                  <li>Live event stream and container state monitoring.</li>
+                </ul>
+              </article>
+            </div>
+          </article>
+=======
+>>>>>>> 72cc85c6d9b0327cc632da15ca062b3728068d22
 
               <div className="landing-page-sections">
                 {activeLandingPageDefinition.sections.map((section) => (
@@ -2189,12 +2444,12 @@ export function App() {
             </div>
             <div className="trace-grid">
               <article className="trace-card">
-                <h3>Repository access</h3>
-                <p>Inspect connected providers, source inventory, clone operations, and review gates.</p>
+                <h3>Projects and repositories</h3>
+                <p>Create projects, inspect connected providers, and start clone or review actions.</p>
               </article>
               <article className="trace-card">
-                <h3>First pipeline</h3>
-                <p>Launch the 10-minute quickstart, inspect stage health, and move through governed delivery.</p>
+                <h3>Pipelines and deployments</h3>
+                <p>Run CI, inspect stage health, promote artifacts, and manage rollbacks.</p>
               </article>
               <article className="trace-card">
                 <h3>Control panel</h3>
@@ -2238,8 +2493,12 @@ export function App() {
   };
 
   const renderScreen = () => {
-    if (!overview || !selectedRepository) {
+    if (!overview) {
       return null;
+    }
+
+    if (!workspaceHasData || !selectedRepository) {
+      return renderEmptyWorkspace();
     }
 
     switch (route.name) {
@@ -2266,6 +2525,7 @@ export function App() {
   return (
     <main className="shell">
       {toast ? <section className="panel toast-panel">{toast}</section> : null}
+      {renderProjectForm()}
 
       {isLoading ? <section className="panel loading-panel">Loading gateway data…</section> : null}
       {!isLoading && authChecking ? <section className="panel loading-panel">Restoring secure session…</section> : null}
@@ -2273,7 +2533,7 @@ export function App() {
         <section className="panel loading-panel">
           <h2>Gateway connection failed</h2>
           <p>{error}</p>
-          <p>Expected source: {activeGatewayBase}/api/overview</p>
+          <p>The operator workspace could not retrieve overview data from the configured gateway.</p>
         </section>
       ) : null}
 

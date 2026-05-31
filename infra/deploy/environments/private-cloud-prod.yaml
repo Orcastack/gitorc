@@ -1,0 +1,13 @@
+environment: prod
+cluster: gitorc-prod
+namespace: gitorc-system
+strategy: blue-green
+promotionRules:
+  requireSuccessfulPipeline: true
+  requireSignedArtifacts: true
+  requireReviewApproval: true
+  requireIdentityBinding: true
+  requirePolicyAttestation: true
+rollback:
+  enabled: true
+  mode: revision

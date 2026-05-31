@@ -55,6 +55,39 @@ jobs:
         name: gitorc-api-signed
         path: gitorcapi/dist
 
+  infra-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.8.5
+
+    - name: Terraform format check
+      run: terraform fmt -check -recursive infra/terraform
+
+    - name: Terraform validate private cloud environment
+      run: |
+        terraform -chdir=infra/terraform/environments/private-cloud init -backend=false
+        terraform -chdir=infra/terraform/environments/private-cloud validate
+
+    - name: Verify deployment environments exist
+      run: |
+        test -f infra/deploy/environments/private-cloud-dev.yaml
+        test -f infra/deploy/environments/private-cloud-stage.yaml
+        test -f infra/deploy/environments/private-cloud-prod.yaml
+
+    - name: Evaluate runtime policy
+      uses: open-policy-agent/setup-opa@v2
+      with:
+        version: latest
+
+    - name: Run OPA policy gate
+      run: opa eval --fail-defined --data infra/policy/opa/runtime-governance.rego --input infra/policy/examples/stage-approval-input.json 'data.gitorc.runtime.deny'
+
   web-build:
     runs-on: ubuntu-latest
     env:

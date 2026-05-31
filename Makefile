@@ -1,7 +1,8 @@
 API_DIR := gitorcapi
 WEB_DIR := gitorcweb
+TF_ENV_DIR := infra/terraform/environments/private-cloud
 
-.PHONY: api-build api-run gateway git review ci cd analytics web-install web-build up down
+.PHONY: api-build api-run gateway git review ci cd analytics web-install web-build up down infra-fmt infra-validate bootstrap-local deploy-private-cloud
 
 api-build:
 	cd $(API_DIR) && go build ./...
@@ -35,3 +36,18 @@ up:
 
 down:
 	docker compose down
+
+infra-fmt:
+	terraform fmt -recursive infra/terraform
+
+infra-validate:
+	terraform -chdir=$(TF_ENV_DIR) init -backend=false
+	terraform -chdir=$(TF_ENV_DIR) validate
+	terraform fmt -check -recursive infra/terraform
+
+bootstrap-local:
+	docker compose up -d postgres redpanda namenode datanode hbase gateway git-service review-service ci-service cd-service analytics-service web
+
+deploy-private-cloud:
+	kubectl apply -f infra/kubernetes/base/namespace.yaml
+	kubectl apply -k infra/kubernetes/platform

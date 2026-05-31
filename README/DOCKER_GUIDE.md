@@ -1,243 +1,65 @@
-# Docker Commands Guide
+# Docker Guide
 
-This guide explains how to use Docker to build and deploy the gitorc project.
+This guide covers the local container bootstrap for GITORC. Docker Compose is only the local entry point; sovereign production deployment lives under `infra/terraform` and `infra/kubernetes`.
 
 ## Prerequisites
 
-- Docker installed and running
-- Docker Compose installed
-- Git (for cloning the repository)
+- Docker Engine
+- Docker Compose v2
+- Git
 
-## Quick Start
-
-### 1. Clone the Repository
+## Local bootstrap
 
 ```bash
-git clone <repository-url>
-cd gitorc
+make bootstrap-local
 ```
 
-### 2. Configure Environment Variables
+This starts:
 
-Copy the example environment file and customize it:
+- Postgres for metadata.
+- Redpanda for event transport.
+- NameNode, DataNode, and HBase for artifact and log-oriented storage.
+- Gateway, Git, Review, CI, CD, and Analytics services.
+- The web preview container.
+
+## Key endpoints
+
+- Gateway HTTP: `http://localhost:8080`
+- Gateway gRPC: `localhost:9080`
+- Git HTTP: `http://localhost:8081`
+- CI service: `http://localhost:8083`
+- CD service: `http://localhost:8084`
+- Web preview: `http://localhost:5050`
+
+## Common commands
 
 ```bash
-cp .env.example .env
+docker compose up --build
+docker compose logs -f gateway
+docker compose logs -f ci-service
+docker compose ps
+docker compose down
 ```
 
-Edit `.env` with your settings:
-- Change `SECRET_KEY` to a secure value
-- Update database credentials
-- Configure `ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS`
+## Local governance inputs
 
-### 3. Build and Start Containers
+The local stack reads mounted secret references from `infra/security`:
+
+- `orca-signing-private.pem`
+- `orca-signing-public.pem`
+- `ldap-bind-password.txt`
+
+Do not commit real credentials.
+
+## Promotion to private cloud
+
+Use Docker Compose for local bootstrap only. For cluster deployment:
 
 ```bash
-# Build all services
-docker-compose build
-
-# Start all services in background
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
+make infra-validate
+terraform -chdir=infra/terraform/environments/private-cloud apply
+make deploy-private-cloud
 ```
-
-Services will be available at:
-- **Backend API**: http://localhost:8000
-- **Frontend**: http://localhost:3000
-- **Database**: localhost:5432
-
-## Common Docker Commands
-
-### Building
-
-```bash
-# Build all services
-docker-compose build
-
-# Build specific service
-docker-compose build backend
-docker-compose build frontend
-
-# Build with no cache
-docker-compose build --no-cache
-```
-
-### Running
-
-```bash
-# Start all services in background
-docker-compose up -d
-
-# Start and view logs
-docker-compose up
-
-# Start specific service
-docker-compose up -d backend
-docker-compose up -d frontend
-
-# Stop all services
-docker-compose down
-
-# Stop and remove volumes
-docker-compose down -v
-```
-
-### Logs and Debugging
-
-```bash
-# View all logs
-docker-compose logs
-
-# Follow logs (live)
-docker-compose logs -f
-
-# Logs for specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f db
-
-# View last 100 lines
-docker-compose logs --tail=100
-```
-
-### Database Management
-
-```bash
-# Access database shell
-docker-compose exec db psql -U postgres -d personal_brand_hub
-
-# Run migrations
-docker-compose exec backend python manage.py migrate
-
-# Create superuser
-docker-compose exec backend python manage.py createsuperuser
-
-# Add sample data
-docker-compose exec backend python manage.py add_sample_discussions
-
-# Backup database
-docker-compose exec db pg_dump -U postgres personal_brand_hub > backup.sql
-```
-
-### Django Management
-
-```bash
-# Run shell
-docker-compose exec backend python manage.py shell
-
-# Collect static files
-docker-compose exec backend python manage.py collectstatic
-
-# Check deployment
-docker-compose exec backend python manage.py check --deploy
-```
-
-### Container Operations
-
-```bash
-# List running containers
-docker-compose ps
-
-# Execute command in container
-docker-compose exec backend bash
-docker-compose exec frontend sh
-
-# Restart services
-docker-compose restart
-
-# Restart specific service
-docker-compose restart backend
-```
-
-### Cleaning Up
-
-```bash
-# Stop and remove containers
-docker-compose down
-
-# Remove all containers, volumes, and networks
-docker-compose down -v
-
-# Remove unused Docker resources
-docker system prune
-
-# Remove all Docker resources (be careful!)
-docker system prune -a
-```
-
-## Production Deployment
-
-### 1. Update Environment Variables
-
-```bash
-# Edit .env for production
-DEBUG=False
-SECRET_KEY=<generate-secure-key>
-ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-CORS_ALLOWED_ORIGINS=https://yourdomain.com
-REACT_APP_API_URL=https://yourdomain.com/api
-NODE_ENV=production
-```
-
-### 2. Build Production Images
-
-```bash
-docker-compose -f docker-compose.yml build
-```
-
-### 3. Deploy to Server
-
-```bash
-# On your server, pull the latest code
-git pull origin main
-
-# Build and start services
-docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
-```
-
-### 4. SSL/HTTPS Setup (Nginx)
-
-Update nginx.conf with SSL certificates:
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name yourdomain.com;
-
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-    
-    # ... rest of configuration
-}
-```
-
-## Troubleshooting
-
-### Port Already in Use
-
-```bash
-# Find process using port 8000
-lsof -i :8000
-# or on Windows
-netstat -ano | findstr :8000
-
-# Kill process
-kill -9 <PID>
-# or stop the container
-docker-compose down
-```
-
-### Database Connection Error
-
-```bash
 # Check if database is running
 docker-compose ps
 
