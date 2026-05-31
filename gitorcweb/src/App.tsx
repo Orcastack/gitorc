@@ -70,6 +70,9 @@ type LandingIconName =
   | 'control-panel'
   | 'login'
   | 'github'
+  | 'gitlab'
+  | 'google'
+  | 'gitorc'
   | 'search'
   | 'theme'
   | 'profile';
@@ -115,7 +118,7 @@ type LandingHeaderLink = {
   targetId?: LandingPageId;
   href?: string;
   external?: boolean;
-  publicPage?: 'home' | 'platform' | 'signin';
+  publicPage?: 'home' | 'platform' | 'signin' | 'signup';
 };
 
 const landingBootstrapCommands = [
@@ -589,6 +592,24 @@ function LandingIcon({ icon }: { icon: LandingIconName }) {
           <path d="M12 3.6a8.6 8.6 0 0 0-2.7 16.8v-2.8c-3.1.7-3.8-1.3-3.8-1.3-.5-1.2-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 .1 1.6.7 2 1.4.3-.8.8-1.3 1.3-1.6-2.5-.3-5.1-1.2-5.1-5.5 0-1.2.4-2.2 1.1-3-.1-.3-.5-1.4.1-2.9 0 0 .9-.3 3 .9a10.2 10.2 0 0 1 5.5 0c2.1-1.2 3-.9 3-.9.6 1.5.2 2.6.1 2.9.7.8 1.1 1.8 1.1 3 0 4.3-2.6 5.2-5.1 5.5.4.4.8 1.1.8 2.2v3.3A8.6 8.6 0 0 0 12 3.6Z" fill="currentColor" />
         </svg>
       );
+    case 'gitlab':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m12 20.2 3.8-11.7h-7.6L12 20.2Z" fill="currentColor" />
+          <path d="M12 20.2 4.8 12.4h3.6L12 20.2ZM12 20.2l7.2-7.8h-3.6L12 20.2ZM8.4 8.5l-3.6 3.9-1-3.2a.7.7 0 0 1 .5-.9l2-.5 2.1.7ZM15.6 8.5l3.6 3.9 1-3.2a.7.7 0 0 0-.5-.9l-2-.5-2.1.7ZM8.4 8.5 10.2 3a.6.6 0 0 1 1.1 0l1.7 5.5H8.4ZM12.9 8.5 14.6 3a.6.6 0 0 1 1.1 0l1.8 5.5h-4.6ZM6.5 8.5 8.2 3a.6.6 0 0 1 1.1 0L11 8.5H6.5Z" fill="currentColor" />
+        </svg>
+      );
+    case 'google':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21.8 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.5a4.8 4.8 0 0 1-2 3.1v2.6h3.2c1.9-1.8 3.1-4.3 3.1-7.4Z" fill="#4285F4" />
+          <path d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3.2-2.6c-.9.6-2.1 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.7A10 10 0 0 0 12 22Z" fill="#34A853" />
+          <path d="M6.4 13.9a6 6 0 0 1 0-3.8V7.4H3.1a10 10 0 0 0 0 9.1l3.3-2.6Z" fill="#FBBC04" />
+          <path d="M12 6a5.4 5.4 0 0 1 3.8 1.5l2.8-2.8A9.6 9.6 0 0 0 12 2 10 10 0 0 0 3.1 7.4l3.3 2.6C7.2 7.8 9.4 6 12 6Z" fill="#EA4335" />
+        </svg>
+      );
+    case 'gitorc':
+      return <LandingSystemMark />;
     case 'search':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -659,7 +680,9 @@ type ProjectDraft = {
   sourceUrl: string;
 };
 
-type PublicPage = 'home' | 'platform' | 'signin';
+type PublicPage = 'home' | 'platform' | 'signin' | 'signup';
+
+type AuthProvider = 'github' | 'gitlab' | 'google' | 'gitorc';
 
 const authTokenStorageKey = 'gitorc.auth.token';
 
@@ -697,6 +720,9 @@ function readPublicPage(): PublicPage {
   }
 
   const hash = window.location.hash.replace(/^#/, '');
+  if (hash.startsWith('/signup')) {
+    return 'signup';
+  }
   if (hash.startsWith('/signin')) {
     return 'signin';
   }
@@ -790,6 +816,8 @@ export function App() {
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [signupForm, setSignupForm] = useState({ username: '', email: '', password: '' });
+  const [signupSubmitting, setSignupSubmitting] = useState(false);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1236,6 +1264,31 @@ export function App() {
       setAuthError(loginError instanceof Error ? loginError.message : 'Login failed');
     } finally {
       setAuthSubmitting(false);
+    }
+  };
+
+  const handleProviderAuth = (provider: Exclude<AuthProvider, 'gitorc'>, mode: 'login' | 'signup') => {
+    const providerLabel = provider === 'github' ? 'GitHub' : provider === 'gitlab' ? 'GitLab' : 'Google';
+    setToast(`${providerLabel} ${mode} will connect through your external identity provider configuration.`);
+  };
+
+  const handleSignupSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSignupSubmitting(true);
+
+    try {
+      const principal = signupForm.email.trim() || signupForm.username.trim();
+      if (!principal || !signupForm.password.trim()) {
+        throw new Error('Provide a username or email and password to request access.');
+      }
+
+      setToast('Account requests are reviewed by an administrator before access is granted.');
+      setSignupForm({ username: '', email: '', password: '' });
+      navigatePublic('signin');
+    } catch (signupError) {
+      setToast(signupError instanceof Error ? signupError.message : 'Account request could not be submitted.');
+    } finally {
+      setSignupSubmitting(false);
     }
   };
 
@@ -2426,118 +2479,136 @@ export function App() {
     );
   };
 
-  const renderSignInPage = () => {
+  const renderAuthProviderButton = (provider: Exclude<AuthProvider, 'gitorc'>, mode: 'login' | 'signup') => {
+    const providerLabel = provider === 'github' ? 'GitHub' : provider === 'gitlab' ? 'GitLab' : 'Google';
     return (
-      <section className="signin-shell">
-        <article className="panel signin-panel">
-          <p className="eyebrow">login & identity gate</p>
-          <div className="signin-title-row">
-            <span className="signin-icon"><LandingIcon icon="login" /></span>
-            <h1 className="signin-title">Login before dashboard access.</h1>
+      <button
+        key={`${mode}-${provider}`}
+        className={`auth-provider-button auth-provider-${provider}`}
+        onClick={() => handleProviderAuth(provider, mode)}
+        type="button"
+      >
+        <span className="auth-provider-icon"><LandingIcon icon={provider} /></span>
+        <span>{mode === 'login' ? `Login with ${providerLabel}` : `Sign up with ${providerLabel}`}</span>
+      </button>
+    );
+  };
+
+  const renderAuthPage = (mode: 'signin' | 'signup') => {
+    const isSignup = mode === 'signup';
+
+    return (
+      <section className="auth-shell">
+        <article className="panel auth-card">
+          <div className="auth-card-header">
+            <span className="auth-card-mark"><LandingIcon icon={isSignup ? 'gitorc' : 'login'} /></span>
+            <div>
+              <p className="auth-card-kicker">secure operator access</p>
+              <h1>{isSignup ? 'Create your GITORC account' : 'Login to GITORC'}</h1>
+              <p className="auth-card-subtitle">
+                {isSignup ? 'Create secure access to automation, pipelines, and control-plane operations.' : 'Secure access to automation, pipelines, and control-plane operations.'}
+              </p>
+            </div>
           </div>
-          <p className="lede">
-            GITORC exposes the dashboard only through authenticated directory identity and RBAC policy. Repository actions, CI/CD execution,
-            control-plane operations, and runtime oversight remain behind that access boundary.
-          </p>
-          <div className="signin-badges">
-            <span className="landing-section-chip">Identity required</span>
-            <span className="landing-section-chip">RBAC enforced</span>
-            <span className="landing-section-chip">Dashboard gated</span>
+
+          <div className="auth-provider-list">
+            {renderAuthProviderButton('github', isSignup ? 'signup' : 'login')}
+            {renderAuthProviderButton('gitlab', isSignup ? 'signup' : 'login')}
+            {renderAuthProviderButton('google', isSignup ? 'signup' : 'login')}
           </div>
-          <form className="signin-form" onSubmit={handleLoginSubmit}>
-            <label>
-              Operator username
-              <input
-                autoComplete="username"
-                onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
-                type="text"
-                value={loginForm.username}
-              />
-            </label>
-            <label>
-              Password
-              <input
-                autoComplete="current-password"
-                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                type="password"
-                value={loginForm.password}
-              />
-            </label>
-            {authError ? <p className="signin-error">{authError}</p> : null}
-            <div className="hero-actions">
-              <button className="button button-primary" disabled={authSubmitting || authChecking} type="submit">
+
+          <div className="auth-divider">
+            <span>{isSignup ? 'or create a GITORC account' : 'or login with GITORC account'}</span>
+          </div>
+
+          {isSignup ? (
+            <form className="signin-form auth-form" onSubmit={handleSignupSubmit}>
+              <label>
+                Username
+                <input
+                  autoComplete="username"
+                  onChange={(event) => setSignupForm((current) => ({ ...current, username: event.target.value }))}
+                  placeholder="your-username"
+                  type="text"
+                  value={signupForm.username}
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  autoComplete="email"
+                  onChange={(event) => setSignupForm((current) => ({ ...current, email: event.target.value }))}
+                  placeholder="you@company.com"
+                  type="email"
+                  value={signupForm.email}
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  autoComplete="new-password"
+                  onChange={(event) => setSignupForm((current) => ({ ...current, password: event.target.value }))}
+                  placeholder="Create a password"
+                  type="password"
+                  value={signupForm.password}
+                />
+              </label>
+              <button className="button button-primary auth-submit-button" disabled={signupSubmitting} type="submit">
+                {signupSubmitting ? 'Creating account…' : 'Create GITORC account'}
+              </button>
+            </form>
+          ) : (
+            <form className="signin-form auth-form" onSubmit={handleLoginSubmit}>
+              <label>
+                Username or email
+                <input
+                  autoComplete="username"
+                  onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
+                  placeholder="you@company.com"
+                  type="text"
+                  value={loginForm.username}
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  autoComplete="current-password"
+                  onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                  placeholder="Enter your password"
+                  type="password"
+                  value={loginForm.password}
+                />
+              </label>
+              {authError ? <p className="signin-error">{authError}</p> : null}
+              <button className="button button-primary auth-submit-button" disabled={authSubmitting || authChecking} type="submit">
                 {authSubmitting ? 'Signing in…' : 'Sign in to dashboard'}
               </button>
-              {authSession ? (
-                <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
-                  Sign out current session
-                </button>
-              ) : null}
-            </div>
-          </form>
-          <div className="hero-actions">
-            <button className="button button-ghost" onClick={() => navigatePublic('platform', 'platform-overview')} type="button">Open control panel info</button>
-            <button className="button button-ghost" onClick={() => navigatePublic('home')} type="button">Back to landing page</button>
+            </form>
+          )}
+
+          <p className="auth-security-line">Access is restricted and governed by RBAC and project policies.</p>
+
+          <div className="auth-footer-row">
+            {isSignup ? (
+              <button className="auth-footer-link" onClick={() => navigatePublic('signin')} type="button">Already have access? Login</button>
+            ) : (
+              <button className="auth-footer-link" onClick={() => setToast('Password reset flows should be routed through your identity administrator.')} type="button">Forgot password</button>
+            )}
+            <button className="auth-footer-link" onClick={() => setToast('Need access? Contact your GITORC administrator.')} type="button">Need access? Contact admin</button>
+          </div>
+
+          <div className="auth-footer-row auth-footer-row-secondary">
+            {isSignup ? null : <button className="auth-footer-link" onClick={() => navigatePublic('signup')} type="button">Sign up</button>}
+            <button className="auth-footer-link" onClick={() => navigatePublic('home')} type="button">Back to landing page</button>
           </div>
         </article>
-
-        <section className="signin-grid">
-          <article className="panel stack-panel">
-            <div className="section-heading compact-heading">
-              <div>
-                <p className="section-kicker">Expected operator flow</p>
-                <h2>What opens after login</h2>
-              </div>
-            </div>
-            <div className="trace-grid">
-              <article className="trace-card">
-                <h3>Projects and repositories</h3>
-                <p>Create projects, inspect connected providers, and move from repository intake into governed implementation work.</p>
-              </article>
-              <article className="trace-card">
-                <h3>Pipelines and deployments</h3>
-                <p>Run CI, inspect stage health, promote signed artifacts, and manage controlled rollbacks.</p>
-              </article>
-              <article className="trace-card">
-                <h3>Control plane</h3>
-                <p>Open infrastructure management, runtime visibility, signed events, and trust-state controls.</p>
-              </article>
-              <article className="trace-card">
-                <h3>Community, docs, and APIs</h3>
-                <p>Keep community channels, developer documentation, and API reference inside the same governed platform frame.</p>
-              </article>
-            </div>
-          </article>
-
-          <article className="panel stack-panel">
-            <div className="section-heading compact-heading">
-              <div>
-                <p className="section-kicker">Identity directive</p>
-                <h2>Directory-backed access model</h2>
-              </div>
-            </div>
-            <div className="landing-steps signin-steps">
-              <article className="trace-card">
-                <span className="step-index">1</span>
-                <h3>Directory authentication</h3>
-                <p>Operators sign in with their directory-backed username and password through the gateway LDAP verification flow.</p>
-              </article>
-              <article className="trace-card">
-                <span className="step-index">2</span>
-                <h3>Role-based access</h3>
-                <p>Repository, CI/CD, deployment, and control-plane privileges are derived from directory group membership and RBAC policy.</p>
-              </article>
-              <article className="trace-card">
-                <span className="step-index">3</span>
-                <h3>Session enforcement</h3>
-                <p>Sessions are issued by the gateway and required for dashboard data, so repository, pipeline, and control-plane access stay behind the login gate.</p>
-              </article>
-            </div>
-          </article>
-        </section>
       </section>
     );
   };
+
+  const renderSignInPage = () => renderAuthPage('signin');
+
+  const renderSignUpPage = () => renderAuthPage('signup');
 
   const renderScreen = () => {
     if (!overview) {
@@ -2587,6 +2658,7 @@ export function App() {
       {!isLoading && !error && publicLandingMode && publicPage === 'home' ? renderLandingPage() : null}
       {!isLoading && !error && publicLandingMode && publicPage === 'platform' ? renderPlatformPage() : null}
       {!isLoading && !error && (publicLandingMode ? publicPage === 'signin' : !authSession && !authChecking) ? renderSignInPage() : null}
+      {!isLoading && !error && publicLandingMode && publicPage === 'signup' ? renderSignUpPage() : null}
       {!isLoading && !error && !publicLandingMode && authSession ? renderScreen() : null}
     </main>
   );
