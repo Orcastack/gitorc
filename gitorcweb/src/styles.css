@@ -2266,8 +2266,110 @@ h1 {
     align-items: stretch;
   }
 
+  .landing-shell {
+    gap: 0.5rem;
+  }
+
+  .landing-header {
+    padding: 0.75rem;
+  }
+
+  .landing-header-nav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .landing-nav-link {
+    min-height: 36px;
+  }
+
+  .landing-header-controls {
+    width: 100%;
+  }
+
+  .landing-search {
+    width: 100%;
+    border-width: 1px 0 0;
+    padding: 0.45rem 0 0;
+  }
+
   .landing-search input {
     width: 100%;
+  }
+
+  .landing-hero-shell {
+    min-height: auto;
+    justify-content: flex-start;
+    padding: 1.5rem 0 2.75rem;
+  }
+
+  .landing-hero-panel {
+    width: 100%;
+    padding: 1.75rem 0 2rem;
+  }
+
+  .landing-hero-panel::before {
+    left: -1.25rem;
+    width: min(42rem, calc(100vw - 2rem));
+    height: 19rem;
+  }
+
+  .landing-hero-background {
+    opacity: 0.9;
+  }
+
+  .landing-hero-grid-plane {
+    left: 50%;
+    top: 18%;
+    width: min(62vw, 32rem);
+    height: 24rem;
+  }
+
+  .landing-hero-grid-plane-secondary {
+    left: 68%;
+    top: 34%;
+    width: min(24vw, 10rem);
+    height: 10rem;
+  }
+
+  .landing-hero-cube-cluster {
+    right: 10%;
+    top: 28%;
+    width: 11rem;
+    height: 11rem;
+  }
+
+  .landing-hero-node-ring {
+    right: 6%;
+    bottom: 14%;
+    width: 10rem;
+    height: 10rem;
+  }
+
+  .landing-hero-panel h1 {
+    max-width: 8ch;
+    font-size: clamp(3rem, 10vw, 5rem);
+  }
+
+  .landing-hero-tagline {
+    max-width: 16ch;
+    font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+  }
+
+  .landing-hero-panel .lede {
+    max-width: 100%;
+    font-size: 0.98rem;
+    line-height: 1.72;
+  }
+
+  .landing-hero-actions {
+    width: 100%;
+  }
+
+  .landing-hero-actions .button,
+  .landing-page-actions .button {
+    width: 100%;
+    justify-content: center;
   }
 
   .landing-workbench,
@@ -2297,6 +2399,16 @@ h1 {
 
   .landing-sidebar {
     position: static;
+    padding: 0 0 0.5rem;
+    border-width: 0 0 1px;
+  }
+
+  .landing-page {
+    padding: 0.85rem;
+  }
+
+  .landing-link-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
   .table-head,
@@ -2307,5 +2419,174 @@ h1 {
   .table-pipelines,
   .table-processes {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: min(100% - 1rem, 1380px);
+  }
+
+  .landing-header {
+    gap: 0.6rem;
+    padding: 0.7rem 0.65rem;
+  }
+
+  .landing-brand-copy strong {
+    font-size: 0.78rem;
+  }
+
+  .landing-brand-copy span {
+    font-size: 0.62rem;
+  }
+
+  .landing-header-nav {
+    gap: 0.25rem;
+  }
+
+  .landing-nav-link {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.45rem 0.35rem;
+  }
+
+  .landing-header-controls {
+    gap: 0.5rem;
+  }
+
+  .landing-search {
+    padding-top: 0.5rem;
+  }
+
+  .landing-control-button,
+  .landing-icon-button {
+    min-height: 38px;
+  }
+
+  .landing-hero-shell {
+    padding: 1.1rem 0 2rem;
+  }
+
+  .landing-hero-panel {
+    padding: 1.25rem 0 1.6rem;
+  }
+
+  .landing-hero-panel::before {
+    left: -0.5rem;
+    width: calc(100vw - 1rem);
+    height: 16rem;
+    opacity: 0.98;
+  }
+
+  .landing-hero-background {
+    opacity: 0.72;
+  }
+
+  .landing-hero-orb-primary {
+    top: 8%;
+    right: 2%;
+    width: 13rem;
+    height: 13rem;
+  }
+
+  .landing-hero-orb-secondary,
+  .landing-hero-beam-right,
+  .landing-hero-grid-plane-secondary,
+  .landing-hero-node-ring {
+    display: none;
+  }
+
+  .landing-hero-grid-plane {
+    left: 42%;
+    top: 20%;
+    width: min(78vw, 20rem);
+    height: 16rem;
+    opacity: 0.34;
+  }
+
+  .landing-hero-beam-left {
+    left: 74%;
+    top: 26%;
+    height: 8rem;
+  }
+
+  .landing-hero-cube-cluster {
+    right: 4%;
+    top: 30%;
+    width: 7rem;
+    height: 7rem;
+    opacity: 0.68;
+  }
+
+  .landing-hero-cube-large {
+    left: 2.4rem;
+    bottom: 0.7rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .landing-hero-cube-mid {
+    left: 5.4rem;
+    top: 2rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .landing-hero-cube-small {
+    left: 0.55rem;
+    top: 1.55rem;
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  .landing-hero-panel .eyebrow {
+    margin-bottom: 0.9rem;
+    letter-spacing: 0.18em;
+    font-size: 0.64rem;
+  }
+
+  .landing-hero-panel h1 {
+    max-width: none;
+    font-size: clamp(2.5rem, 16vw, 4rem);
+    line-height: 0.9;
+  }
+
+  .landing-hero-tagline {
+    max-width: none;
+    font-size: clamp(1.05rem, 6vw, 1.45rem);
+  }
+
+  .landing-hero-panel .lede {
+    font-size: 0.94rem;
+    line-height: 1.64;
+  }
+
+  .landing-page {
+    padding: 0.75rem;
+  }
+
+  .landing-page-hero {
+    gap: 0.8rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .landing-page-section {
+    padding: 0.8rem;
+  }
+
+  .landing-link-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-sidebar-link {
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 0.45rem;
+    padding: 0.45rem 0.4rem;
+  }
+
+  .landing-sidebar-icon,
+  .landing-section-icon {
+    width: 20px;
+    height: 20px;
   }
 }
