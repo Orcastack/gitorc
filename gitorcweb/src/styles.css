@@ -457,6 +457,26 @@ body {
   color: var(--landing-muted);
 }
 
+.landing-diagram,
+.landing-example pre {
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+  color: var(--landing-text);
+  overflow-x: auto;
+  white-space: pre;
+  font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.landing-example {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
 .landing-link-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

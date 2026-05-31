@@ -729,12 +729,10 @@ export function App() {
   const [eventKindFilter, setEventKindFilter] = useState<'all' | 'repository' | 'pipeline' | 'deployment' | 'process'>('all');
   const [eventRepositoryFilter, setEventRepositoryFilter] = useState<string>('all');
   const [activeGatewayBase, setActiveGatewayBase] = useState(getGatewayBase());
+<<<<<<< HEAD
   const [projectFormMode, setProjectFormMode] = useState<ProjectFormMode>('closed');
   const [projectDraft, setProjectDraft] = useState<ProjectDraft>(emptyProjectDraft);
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
-  const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
-  const [landingQuery, setLandingQuery] = useState('');
-  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
   const workspaceHasData = hasWorkspaceData(overview);
 
   const loadOverview = async (signal?: AbortSignal) => {
@@ -744,6 +742,11 @@ export function App() {
     setError(null);
     return payload;
   };
+=======
+  const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
+  const [landingQuery, setLandingQuery] = useState('');
+  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
+>>>>>>> 72cc85c6d9b0327cc632da15ca062b3728068d22
 
   useEffect(() => {
     const onHashChange = () => {
@@ -2044,6 +2047,37 @@ export function App() {
                   <button className="button button-ghost" onClick={() => selectLandingPage('bootstrap-locally')} type="button">Bootstrap locally</button>
                 </div>
               </div>
+<<<<<<< HEAD
+            </div>
+            <div className="trace-grid">
+              <article className="trace-card">
+                <h3>Repository control</h3>
+                <ul>
+                  <li>Connected providers and repository inventory.</li>
+                  <li>Clone commands, push remotes, and review entrypoints.</li>
+                  <li>Commit and branch context tied to identity records.</li>
+                </ul>
+              </article>
+              <article className="trace-card">
+                <h3>Delivery orchestration</h3>
+                <ul>
+                  <li>Pipeline lanes with run history and gating state.</li>
+                  <li>Deployment lanes with rollback targets and artifact traceability.</li>
+                  <li>Environment and cluster rollout visibility.</li>
+                </ul>
+              </article>
+              <article className="trace-card">
+                <h3>Runtime trust</h3>
+                <ul>
+                  <li>Process identity, LDAP registration, RBAC verification.</li>
+                  <li>Attestation status for repositories, pipelines, and services.</li>
+                  <li>Live event stream and container state monitoring.</li>
+                </ul>
+              </article>
+            </div>
+          </article>
+=======
+>>>>>>> 72cc85c6d9b0327cc632da15ca062b3728068d22
 
               <div className="landing-page-sections">
                 {activeLandingPageDefinition.sections.map((section) => (
