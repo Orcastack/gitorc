@@ -146,6 +146,24 @@ export type Overview = {
   activity: string[];
 };
 
+export type RepositoryMutationResult = {
+  repository: Repository;
+  clone_operation: CloneOperation;
+};
+
+export type CreateRepositoryInput = {
+  name: string;
+  summary: string;
+  defaultBranch: string;
+};
+
+export type ImportRepositoryInput = {
+  name: string;
+  summary: string;
+  defaultBranch: string;
+  sourceUrl: string;
+};
+
 const configuredGatewayBase = import.meta.env.VITE_GITORC_GATEWAY_URL;
 
 function isLocalHostname(hostname: string) {
@@ -184,20 +202,29 @@ const gatewayCandidates = resolveGatewayCandidates();
 
 let lastResolvedGatewayBase = gatewayCandidates[0] ?? 'gateway unavailable';
 
-export async function fetchOverview(signal?: AbortSignal): Promise<Overview> {
+async function requestGateway<T>(path: string, init?: RequestInit): Promise<T> {
   let lastError: Error | null = null;
 
   for (const base of gatewayCandidates) {
     try {
-      const response = await fetch(`${base}/api/overview`, { signal });
+      const response = await fetch(`${base}${path}`, init);
       if (!response.ok) {
-        throw new Error(`Gateway returned ${response.status}`);
+        let message = `Gateway returned ${response.status}`;
+        try {
+          const errorPayload = await response.json() as { error?: string };
+          if (errorPayload.error) {
+            message = errorPayload.error;
+          }
+        } catch {
+          // fall through to the default status message
+        }
+        throw new Error(message);
       }
 
       lastResolvedGatewayBase = base;
-      return response.json() as Promise<Overview>;
+      return response.json() as Promise<T>;
     } catch (error) {
-      if (signal?.aborted) {
+      if (init?.signal?.aborted) {
         throw error;
       }
       lastError = error instanceof Error ? error : new Error('Unknown gateway error');
@@ -205,6 +232,39 @@ export async function fetchOverview(signal?: AbortSignal): Promise<Overview> {
   }
 
   throw lastError ?? new Error('Failed to reach any configured gateway endpoint');
+}
+
+export async function fetchOverview(signal?: AbortSignal): Promise<Overview> {
+  return requestGateway<Overview>('/api/overview', { signal });
+}
+
+export async function createRepository(input: CreateRepositoryInput): Promise<RepositoryMutationResult> {
+  return requestGateway<RepositoryMutationResult>('/api/repositories', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: input.name,
+      summary: input.summary,
+      default_branch: input.defaultBranch,
+    }),
+  });
+}
+
+export async function importRepository(input: ImportRepositoryInput): Promise<RepositoryMutationResult> {
+  return requestGateway<RepositoryMutationResult>('/api/repositories/import', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: input.name,
+      summary: input.summary,
+      default_branch: input.defaultBranch,
+      source_url: input.sourceUrl,
+    }),
+  });
 }
 
 export function getGatewayBase() {

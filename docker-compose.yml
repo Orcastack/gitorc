@@ -98,11 +98,15 @@ services:
     command: sh -c "go mod download && go run ./cmd/gitorc-gateway"
     volumes:
       - ./gitorcapi:/workspace/gitorcapi
+      - ./infra/git/repos:/srv/git
       - ./infra/security:/run/secrets:ro
     environment:
       GITORC_GATEWAY_HTTP_PORT: 8080
       GITORC_GATEWAY_GRPC_PORT: 9080
       GITORC_GATEWAY_IDENTITY: ${GITORC_GATEWAY_IDENTITY:-orca:service:4c3f7ef4-bf28-4dc0-903c-b3cfd4fdd9b4}
+      GITORC_REPO_ROOT: /srv/git
+      GITORC_REPO_PUBLIC_ROOT: ${PWD:-/workspace}/infra/git/repos
+      GITORC_PUBLIC_GIT_BASE: http://localhost:8080/git
       <<: *gitorc-security-env
     ports:
       - "8080:8080"
