@@ -1,10 +1,79 @@
 package gatewayapi
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"encoding/hex"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
 )
+
+const authSessionTTL = 12 * time.Hour
+
+type AuthUser struct {
+	Username    string   `json:"username"`
+	FullName    string   `json:"full_name"`
+	Email       string   `json:"email"`
+	Role        string   `json:"role"`
+	Identity    string   `json:"identity"`
+	RBACRealm   string   `json:"rbac_realm"`
+	Permissions []string `json:"permissions"`
+}
+
+type AuthSession struct {
+	Token     string   `json:"token,omitempty"`
+	User      AuthUser `json:"user"`
+	ExpiresAt string   `json:"expires_at"`
+}
+
+type loginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type authRecord struct {
+	Password string
+	User     AuthUser
+}
+
+var authRecords = map[string]authRecord{
+	"platform-admin": {
+		Password: "gitorc-demo",
+		User: AuthUser{
+			Username:    "platform-admin",
+			FullName:    "Avery Morgan",
+			Email:       "platform-admin@gitorc.local",
+			Role:        "platform-admin",
+			Identity:    "orca:user:1f5b91de-25f5-4f05-a9d9-c447680a98b1",
+			RBACRealm:   "platform-operations",
+			Permissions: []string{"repositories:read", "pipelines:write", "deployments:write", "control-panel:admin", "community:read"},
+		},
+	},
+	"release-operator": {
+		Password: "gitorc-demo",
+		User: AuthUser{
+			Username:    "release-operator",
+			FullName:    "Jordan Kim",
+			Email:       "release-operator@gitorc.local",
+			Role:        "release-operator",
+			Identity:    "orca:user:bf97cdf0-4b2a-40e2-9aa6-4c72a289e1d5",
+			RBACRealm:   "platform-release",
+			Permissions: []string{"repositories:read", "pipelines:write", "deployments:write", "control-panel:read", "community:read"},
+		},
+	},
+}
+
+var authSessions = struct {
+	sync.RWMutex
+	store map[string]sessionRecord
+}{store: make(map[string]sessionRecord)}
+
+type sessionRecord struct {
+	User      AuthUser
+	ExpiresAt time.Time
+}
 
 type Provider struct {
 	ID         string `json:"id"`
@@ -155,27 +224,150 @@ type Metric struct {
 }
 
 func Register(mux *http.ServeMux) {
-	mux.HandleFunc("/api/providers", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/api/auth/login", handleLogin)
+	mux.HandleFunc("/api/auth/session", handleSession)
+	mux.HandleFunc("/api/auth/logout", handleLogout)
+
+	mux.HandleFunc("/api/providers", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data().Providers)
-	})
-	mux.HandleFunc("/api/repositories", func(w http.ResponseWriter, _ *http.Request) {
+}))
+	mux.HandleFunc("/api/repositories", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data().Repositories)
-	})
-	mux.HandleFunc("/api/reviews", func(w http.ResponseWriter, _ *http.Request) {
+	}))
+	mux.HandleFunc("/api/reviews", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data().Reviews)
-	})
-	mux.HandleFunc("/api/pipelines", func(w http.ResponseWriter, _ *http.Request) {
+	}))
+	mux.HandleFunc("/api/pipelines", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data().Pipelines)
-	})
-	mux.HandleFunc("/api/deployments", func(w http.ResponseWriter, _ *http.Request) {
+	}))
+	mux.HandleFunc("/api/deployments", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data().Deployments)
-	})
-	mux.HandleFunc("/api/containers", func(w http.ResponseWriter, _ *http.Request) {
+	}))
+	mux.HandleFunc("/api/containers", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data().Containers)
-	})
-	mux.HandleFunc("/api/overview", func(w http.ResponseWriter, _ *http.Request) {
+	}))
+	mux.HandleFunc("/api/overview", requireAuth(func(w http.ResponseWriter, _ *http.Request, _ sessionRecord) {
 		writeJSON(w, data())
-	})
+	}))
+}
+
+func handleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	var request loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid login payload")
+		return
+	}
+
+	record, ok := authRecords[strings.TrimSpace(request.Username)]
+	if !ok || record.Password != request.Password {
+		writeError(w, http.StatusUnauthorized, "invalid username or password")
+		return
+	}
+
+	token, err := generateToken()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create session token")
+		return
+	}
+
+	expiresAt := time.Now().UTC().Add(authSessionTTL)
+	authSessions.Lock()
+	authSessions.store[token] = sessionRecord{User: record.User, ExpiresAt: expiresAt}
+	authSessions.Unlock()
+
+	writeJSON(w, AuthSession{Token: token, User: record.User, ExpiresAt: expiresAt.Format(time.RFC3339)})
+}
+
+func handleSession(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	requireAuth(func(w http.ResponseWriter, _ *http.Request, session sessionRecord) {
+		writeJSON(w, AuthSession{User: session.User, ExpiresAt: session.ExpiresAt.Format(time.RFC3339)})
+	})(w, r)
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	token := bearerToken(r)
+	if token != "" {
+		authSessions.Lock()
+		delete(authSessions.store, token)
+		authSessions.Unlock()
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func requireAuth(next func(w http.ResponseWriter, r *http.Request, session sessionRecord)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := bearerToken(r)
+		if token == "" {
+			writeError(w, http.StatusUnauthorized, "missing bearer token")
+			return
+		}
+
+		session, ok := lookupSession(token)
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "session expired or invalid")
+			return
+		}
+
+		next(w, r, session)
+	}
+}
+
+func lookupSession(token string) (sessionRecord, bool) {
+	authSessions.RLock()
+	session, ok := authSessions.store[token]
+	authSessions.RUnlock()
+	if !ok {
+		return sessionRecord{}, false
+	}
+	if time.Now().UTC().After(session.ExpiresAt) {
+		authSessions.Lock()
+		delete(authSessions.store, token)
+		authSessions.Unlock()
+		return sessionRecord{}, false
+	}
+	return session, true
+}
+
+func bearerToken(r *http.Request) string {
+	authorization := strings.TrimSpace(r.Header.Get("Authorization"))
+	if authorization == "" {
+		return ""
+	}
+	prefix := "Bearer "
+	if !strings.HasPrefix(authorization, prefix) {
+		return ""
+	}
+	return strings.TrimSpace(strings.TrimPrefix(authorization, prefix))
+}
+
+func generateToken() (string, error) {
+	b := make([]byte, 24)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
 func writeJSON(w http.ResponseWriter, payload any) {

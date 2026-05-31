@@ -1,9 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import {
+  fetchSession,
   fetchOverview,
   getGatewayBase,
   isStaticOverviewMode,
+  login,
+  logout,
+  type AuthSession,
   type CloneOperation,
   type Container,
   type Deployment,
@@ -55,6 +59,10 @@ type LandingIconName =
   | 'security'
   | 'docs'
   | 'community'
+  | 'channel'
+  | 'repository'
+  | 'control-panel'
+  | 'login'
   | 'github'
   | 'search'
   | 'theme'
@@ -97,9 +105,11 @@ type LandingSidebarGroup = {
 
 type LandingHeaderLink = {
   label: string;
+  icon: LandingIconName;
   targetId?: LandingPageId;
   href?: string;
   external?: boolean;
+  publicPage?: 'home' | 'platform' | 'signin';
 };
 
 const landingBootstrapCommands = [
@@ -113,8 +123,8 @@ const landingPages: LandingPage[] = [
   {
     id: 'landing-overview',
     label: 'Developer platform overview',
-    title: 'Developer platform overview',
-    intro: 'Use the landing page to route into the platform, not to explain everything at once. Start the stack, understand the system shape, then move into the deeper repo, docs, workflow, and community pages.',
+    title: 'A professional control plane for identity-driven software delivery',
+    intro: 'GITORC brings repository access, CI/CD automation, signed runtime decisions, and operator governance into one platform frame built for serious engineering teams.',
     sections: [
       {
         title: 'Start here',
@@ -196,8 +206,8 @@ const landingPages: LandingPage[] = [
   {
     id: 'platform-overview',
     label: 'Platform overview',
-    title: 'Platform structure across CI/CD, workflows, devices, and security',
-    intro: 'The platform structure should be understandable at a glance: repositories feed workflows, workflows drive CI/CD, delivery extends into devices and nodes, and security enforces the path.',
+    title: 'Platform structure across CI/CD, workflows, infrastructure, and trust',
+    intro: 'The platform is designed to read clearly at a glance: repositories feed workflows, workflows drive CI/CD, infrastructure executes delivery, and identity-backed policy keeps the path governable.',
     sections: [
       { title: 'High-level map', bullets: ['CI/CD engine is the core operating runtime.', 'Pipelines and workflows translate repository state into delivery state.', 'Devices, nodes, and location-aware runtimes extend the orchestration surface.', 'Security binds identity, artifacts, and policy enforcement.'] },
       { title: 'Next', links: [{ label: 'CI/CD engine', targetId: 'ci-cd-engine' }, { label: 'Pipelines & workflows', targetId: 'platform-pipelines-workflows' }, { label: 'Security model', targetId: 'security-model' }] },
@@ -302,8 +312,8 @@ const landingPages: LandingPage[] = [
   {
     id: 'repository-role',
     label: 'Repository role',
-    title: 'The repository as download path, implementation base, and audit trail',
-    intro: 'The repository is the delivery base, cloning path, implementation surface, and audit trail for how the platform evolves.',
+    title: 'The repository as product surface, implementation base, and audit trail',
+    intro: 'The repository is where developers first evaluate the platform, clone the implementation, inspect release movement, and understand how GITORC evolves over time.',
     sections: [
       { title: 'Repository function', bullets: ['Source control and implementation start here.', 'Bootstrap, docs, APIs, and service boundaries are discoverable from the monorepo.', 'Changelog and release movement remain tied to repository history.'] },
       { title: 'Links', links: [{ label: 'Open GitHub repository', href: 'https://github.com/AtonixCorp/gitorc', external: true }, { label: 'Monorepo layout', targetId: 'monorepo-layout' }, { label: 'Changelog & releases', targetId: 'changelog-releases' }] },
@@ -340,11 +350,11 @@ const landingPages: LandingPage[] = [
   {
     id: 'docs-inventory',
     label: 'Docs inventory',
-    title: 'Developer documentation inventory',
-    intro: 'Documentation should give developers a fast structural map of the platform.',
+    title: 'Developer documentation built for fast technical evaluation',
+    intro: 'Documentation should help developers and stakeholders understand the platform quickly, with clear paths through architecture, quickstarts, operations, and APIs.',
     sections: [
       { title: 'Documentation surfaces', links: [{ label: 'API reference', targetId: 'api-reference' }, { label: 'Architecture docs', targetId: 'architecture-docs' }, { label: 'Local development guide', targetId: 'local-development-guide' }] },
-      { title: 'Inventory', bullets: ['README and architecture docs describe the platform structure and operating model.', 'API documentation and contracts explain integration surfaces.', 'Local development docs define bootstrap, build, and endpoint behavior.'] },
+      { title: 'Inventory', bullets: ['README and architecture docs describe the platform structure and operating model.', 'API documentation and contracts explain integration surfaces.', 'Local development docs define bootstrap, build, and endpoint behavior.'], links: [{ label: 'First pipeline in 10 minutes', targetId: 'first-pipeline-10-minutes', detail: 'Quickstart guides live under developer documentation.' }] },
     ],
     searchTerms: ['docs inventory', 'documentation'],
   },
@@ -378,8 +388,8 @@ const landingPages: LandingPage[] = [
   {
     id: 'developer-community',
     label: 'Developer community',
-    title: 'Developer community for discussion, implementation questions, and support',
-    intro: 'Community surfaces should be treated as part of the engineering system around the platform.',
+    title: 'Developer community for adoption, discussion, and contributor momentum',
+    intro: 'Community channels are part of the platform experience: they support implementation questions, contributor onboarding, and long-term confidence around adoption.',
     sections: [
       { title: 'Community role', bullets: ['Create a place for engineering discussion around workflows and runtime operations.', 'Support contributors and adopters with a visible path to ask questions.', 'Keep community connected to docs, repository history, and contribution flow.'] },
       { title: 'Related pages', links: [{ label: 'Discord & channels', targetId: 'discord-channels' }, { label: 'Contribution guide', targetId: 'contribution-guide' }, { label: 'Issue templates & RFCs', targetId: 'issue-templates-rfcs' }] },
@@ -414,68 +424,40 @@ const landingPages: LandingPage[] = [
 
 const landingSidebarGroups: LandingSidebarGroup[] = [
   {
-    label: 'Getting started',
+    label: 'Platform navigation',
     items: [
-      { id: 'getting-started-overview', label: 'Overview', icon: 'overview' },
-      { id: 'clone-run-locally', label: 'Clone & run locally', icon: 'github' },
-      { id: 'first-pipeline-10-minutes', label: 'First pipeline in 10 minutes', icon: 'automation' },
-    ],
-  },
-  {
-    label: 'Platform structure',
-    items: [
-      { id: 'platform-overview', label: 'Overview', icon: 'overview' },
+      { id: 'landing-overview', label: 'Overview', icon: 'overview' },
+      { id: 'platform-overview', label: 'Platform structure', icon: 'control-panel' },
       { id: 'ci-cd-engine', label: 'CI/CD engine', icon: 'automation' },
       { id: 'platform-pipelines-workflows', label: 'Pipelines & workflows', icon: 'pipelines' },
-      { id: 'device-node-integration', label: 'Device & node integration', icon: 'devices' },
-      { id: 'location-intelligence', label: 'Location intelligence', icon: 'location' },
-      { id: 'private-cloud-hpc', label: 'Private cloud & HPC', icon: 'cloud' },
-      { id: 'security-model', label: 'Security model', icon: 'security' },
     ],
   },
   {
-    label: 'CI/CD & workflows',
+    label: 'Developer workflow',
     items: [
-      { id: 'workflow-system', label: 'How workflows enable one cohesive system', icon: 'workflow' },
-      { id: 'workflow-states-delivery', label: 'Workflow states & delivery', icon: 'pipelines' },
-      { id: 'runtime-strategies', label: 'Runtime strategies', icon: 'devices' },
-      { id: 'signed-artifacts-policy', label: 'Signed artifacts & policy', icon: 'security' },
-    ],
-  },
-  {
-    label: 'Repository & bootstrap',
-    items: [
-      { id: 'repository-role', label: 'Repository role', icon: 'github' },
-      { id: 'monorepo-layout', label: 'Monorepo layout', icon: 'overview' },
+      { id: 'repository-role', label: 'Repository role', icon: 'repository' },
       { id: 'bootstrap-locally', label: 'Bootstrap locally', icon: 'automation' },
-      { id: 'changelog-releases', label: 'Changelog & releases', icon: 'overview' },
-    ],
-  },
-  {
-    label: 'Developer docs & APIs',
-    items: [
       { id: 'docs-inventory', label: 'Docs inventory', icon: 'docs' },
-      { id: 'api-reference', label: 'API reference', icon: 'docs' },
-      { id: 'architecture-docs', label: 'Architecture docs', icon: 'docs' },
-      { id: 'local-development-guide', label: 'Local development guide', icon: 'docs' },
+      { id: 'developer-community', label: 'Developer community', icon: 'community' },
     ],
   },
   {
-    label: 'Community & support',
+    label: 'Reference links',
     items: [
-      { id: 'developer-community', label: 'Developer community', icon: 'community' },
-      { id: 'discord-channels', label: 'Discord & channels', icon: 'community' },
-      { id: 'contribution-guide', label: 'Contribution guide', icon: 'community' },
-      { id: 'issue-templates-rfcs', label: 'Issue templates & RFCs', icon: 'community' },
+      { id: 'changelog-releases', label: 'View changelog', icon: 'repository' },
+      { id: 'discord-channels', label: 'Join community', icon: 'channel' },
+      { id: 'api-reference', label: 'API reference', icon: 'docs' },
+      { id: 'security-model', label: 'Security model', icon: 'security' },
     ],
   },
 ];
 
 const landingHeaderLinks: LandingHeaderLink[] = [
-  { label: 'Docs', targetId: 'docs-inventory' },
-  { label: 'API Reference', targetId: 'api-reference' },
-  { label: 'Toolbox', targetId: 'developer-community' },
-  { label: 'Changelog', targetId: 'changelog-releases' },
+  { label: 'Platform', icon: 'control-panel', publicPage: 'platform', targetId: 'platform-overview' },
+  { label: 'Repository', icon: 'repository', targetId: 'repository-role', publicPage: 'platform' },
+  { label: 'Docs', icon: 'docs', targetId: 'docs-inventory', publicPage: 'platform' },
+  { label: 'Community', icon: 'community', targetId: 'developer-community', publicPage: 'platform' },
+  { label: 'Login', icon: 'login', publicPage: 'signin' },
 ];
 
 function isLandingPageId(value: string): value is LandingPageId {
@@ -563,6 +545,36 @@ function LandingIcon({ icon }: { icon: LandingIconName }) {
           <path d="M4.5 18a3.5 3.5 0 0 1 7 0M12.5 18a3.5 3.5 0 0 1 7 0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
         </svg>
       );
+    case 'channel':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 7.5A2.5 2.5 0 0 1 7.5 5h9A2.5 2.5 0 0 1 19 7.5v6A2.5 2.5 0 0 1 16.5 16H11l-3.8 3.2V16H7.5A2.5 2.5 0 0 1 5 13.5Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M8.5 9.5h7M8.5 12.5h4.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case 'repository':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 5.5h11a2 2 0 0 1 2 2v11H8a2 2 0 0 0-2 2Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M9 9h6M9 12.5h6M9 16h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case 'control-panel':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="5" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <rect x="14" y="5" width="6" height="10" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <rect x="4" y="15" width="6" height="4" rx="1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <path d="M14 18h6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case 'login':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M13 8l4 4-4 4M9 12h8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case 'github':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -623,7 +635,30 @@ type FocusState =
   | { kind: 'deployment'; id: string }
   | { kind: 'process'; id: string };
 
-type PublicPage = 'home' | 'signin';
+type PublicPage = 'home' | 'platform' | 'signin';
+
+const authTokenStorageKey = 'gitorc.auth.token';
+
+function readStoredAuthToken() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(authTokenStorageKey);
+}
+
+function storeAuthToken(token: string | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!token) {
+    window.localStorage.removeItem(authTokenStorageKey);
+    return;
+  }
+
+  window.localStorage.setItem(authTokenStorageKey, token);
+}
 
 function readPublicPage(): PublicPage {
   if (typeof window === 'undefined') {
@@ -631,7 +666,25 @@ function readPublicPage(): PublicPage {
   }
 
   const hash = window.location.hash.replace(/^#/, '');
-  return hash.startsWith('/signin') ? 'signin' : 'home';
+  if (hash.startsWith('/signin')) {
+    return 'signin';
+  }
+  if (hash.startsWith('/platform')) {
+    return 'platform';
+  }
+  return 'home';
+}
+
+function readLandingPageFromHash(): LandingPageId {
+  if (typeof window === 'undefined') {
+    return 'platform-overview';
+  }
+
+  const hash = window.location.hash.replace(/^#/, '');
+  const parts = hash.split('/').filter(Boolean);
+  const candidate = parts[1];
+
+  return candidate && isLandingPageId(candidate) ? candidate : 'platform-overview';
 }
 
 function readRoute(): RouteState {
@@ -684,6 +737,12 @@ export function App() {
   const publicLandingMode = isStaticOverviewMode();
   const [route, setRoute] = useState<RouteState>(() => readRoute());
   const [publicPage, setPublicPage] = useState<PublicPage>(() => readPublicPage());
+  const [authToken, setAuthToken] = useState<string | null>(() => readStoredAuthToken());
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
+  const [authChecking, setAuthChecking] = useState(() => readStoredAuthToken() !== null);
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [loginForm, setLoginForm] = useState({ username: 'platform-admin', password: 'gitorc-demo' });
   const [overview, setOverview] = useState<Overview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -694,17 +753,59 @@ export function App() {
   const [activeGatewayBase, setActiveGatewayBase] = useState(getGatewayBase());
   const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
   const [landingQuery, setLandingQuery] = useState('');
-  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
+  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>(() => readLandingPageFromHash());
 
   useEffect(() => {
     const onHashChange = () => {
       setRoute(readRoute());
       setPublicPage(readPublicPage());
+      setActiveLandingPage(readLandingPageFromHash());
     };
 
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!authToken) {
+      setAuthSession(null);
+      setAuthChecking(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setAuthChecking(true);
+
+    void fetchSession(authToken)
+      .then((session) => {
+        if (!active) {
+          return;
+        }
+        setAuthSession({ ...session, token: authToken });
+        setAuthError(null);
+      })
+      .catch((sessionError) => {
+        if (!active) {
+          return;
+        }
+        storeAuthToken(null);
+        setAuthToken(null);
+        setAuthSession(null);
+        setAuthError(sessionError instanceof Error ? sessionError.message : 'Session validation failed');
+      })
+      .finally(() => {
+        if (active) {
+          setAuthChecking(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authToken]);
 
   useEffect(() => {
     let active = true;
@@ -718,9 +819,18 @@ export function App() {
       };
     }
 
+    if (!authSession?.token) {
+      setIsLoading(false);
+      setOverview(null);
+      setError(null);
+      return () => {
+        active = false;
+      };
+    }
+
     const loadOverview = async () => {
       try {
-        const payload = await fetchOverview();
+        const payload = await fetchOverview(undefined, authSession.token);
         if (!active) {
           return;
         }
@@ -731,7 +841,17 @@ export function App() {
         if (!active) {
           return;
         }
-        setError(fetchError instanceof Error ? fetchError.message : 'Unknown gateway error');
+        const message = fetchError instanceof Error ? fetchError.message : 'Unknown gateway error';
+        if (message.toLowerCase().includes('session') || message.toLowerCase().includes('missing bearer token')) {
+          storeAuthToken(null);
+          setAuthToken(null);
+          setAuthSession(null);
+          setAuthError('Your session expired. Sign in again to access the dashboard.');
+          setOverview(null);
+          setError(null);
+          return;
+        }
+        setError(message);
       } finally {
         if (active) {
           setIsLoading(false);
@@ -750,7 +870,7 @@ export function App() {
         window.clearInterval(interval);
       }
     };
-  }, [publicLandingMode]);
+  }, [authSession?.token, publicLandingMode]);
 
   useEffect(() => {
     if (!toast) {
@@ -881,12 +1001,25 @@ export function App() {
     setRoute({ name, repositoryId });
   };
 
-  const navigatePublic = (page: PublicPage) => {
-    window.location.hash = page === 'signin' ? '#/signin' : '#/';
+  const navigatePublic = (page: PublicPage, pageId?: LandingPageId) => {
+    const targetPageId = pageId ?? activeLandingPage;
+    if (page === 'signin') {
+      window.location.hash = '#/signin';
+    } else if (page === 'platform') {
+      window.location.hash = `#/platform/${targetPageId}`;
+      setActiveLandingPage(targetPageId);
+    } else {
+      window.location.hash = '#/';
+    }
     setPublicPage(page);
   };
 
   const selectLandingPage = (pageId: LandingPageId) => {
+    if (publicLandingMode) {
+      navigatePublic('platform', pageId);
+      return;
+    }
+
     setActiveLandingPage(pageId);
   };
 
@@ -895,11 +1028,14 @@ export function App() {
 
     const query = landingQuery.trim().toLowerCase();
     if (!query) {
-      selectLandingPage('landing-overview');
+      selectLandingPage('platform-overview');
       return;
     }
 
     const match = landingPages.find((page) => {
+      if (page.id === 'landing-overview') {
+        return false;
+      }
       const sectionTitles = page.sections.map((section) => section.title).join(' ');
       const sectionLinks = page.sections.flatMap((section) => (section.links || []).map((link) => link.label)).join(' ');
       const haystack = [page.label, page.title, page.intro, sectionTitles, sectionLinks, ...page.searchTerms].join(' ').toLowerCase();
@@ -925,6 +1061,47 @@ export function App() {
     [activeLandingPageDefinition.id],
   );
 
+  const dashboardShortcutCards = useMemo(
+    () => [
+      {
+        title: 'Repository access',
+        description: 'Open connected source inventory, clone paths, and review entry points.',
+        icon: 'repository' as LandingIconName,
+        actionLabel: 'Open repositories',
+        onClick: () => navigateTo('repositories', selectedRepository?.id),
+      },
+      {
+        title: 'First pipeline',
+        description: 'Start the 10-minute quickstart and move directly into governed CI/CD flow.',
+        icon: 'pipelines' as LandingIconName,
+        actionLabel: 'Run pipeline',
+        onClick: () => navigateTo('pipelines', selectedRepository?.id),
+      },
+      {
+        title: 'Control panel',
+        description: 'Inspect deployments, live runtime, trust state, and control-plane health.',
+        icon: 'control-panel' as LandingIconName,
+        actionLabel: 'Open overview',
+        onClick: () => navigateTo('overview', selectedRepository?.id),
+      },
+      {
+        title: 'Community channels',
+        description: 'Route operators and contributors to support, onboarding, and discussion threads.',
+        icon: 'channel' as LandingIconName,
+        actionLabel: 'Open community page',
+        onClick: () => window.open('https://github.com/AtonixCorp/gitorc', '_blank', 'noreferrer'),
+      },
+      {
+        title: 'Docs & API reference',
+        description: 'Keep architecture, quickstarts, and contract references one click away.',
+        icon: 'docs' as LandingIconName,
+        actionLabel: 'Open docs',
+        onClick: () => window.open('https://github.com/AtonixCorp/gitorc/tree/main/docs', '_blank', 'noreferrer'),
+      },
+    ],
+    [selectedRepository?.id],
+  );
+
   const renderLandingLink = (link: LandingPageLink, className: string, buttonClassName = className) => {
     if (link.external && link.href) {
       return (
@@ -945,6 +1122,55 @@ export function App() {
     }
 
     return null;
+  };
+
+  const handleLoginSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthSubmitting(true);
+    setAuthError(null);
+
+    try {
+      const session = await login(loginForm.username.trim(), loginForm.password);
+      if (!session.token) {
+        throw new Error('Gateway did not return a session token');
+      }
+
+      storeAuthToken(session.token);
+      setAuthToken(session.token);
+      setAuthSession(session);
+      setToast(`Welcome back, ${session.user.full_name}.`);
+
+      if (publicLandingMode) {
+        navigateTo('overview');
+      } else {
+        window.location.hash = toHash('overview');
+        setRoute({ name: 'overview' });
+      }
+    } catch (loginError) {
+      setAuthError(loginError instanceof Error ? loginError.message : 'Login failed');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    const currentToken = authToken;
+    try {
+      if (currentToken) {
+        await logout(currentToken);
+      }
+    } catch {
+      // Ignore logout transport errors and clear local session anyway.
+    }
+
+    storeAuthToken(null);
+    setAuthToken(null);
+    setAuthSession(null);
+    setOverview(null);
+    setFocus(null);
+    setToast('Signed out of the control plane.');
+    setPublicPage(publicLandingMode ? 'signin' : 'home');
+    window.location.hash = publicLandingMode ? '#/signin' : '#/signin';
   };
 
   const copyText = async (value: string, label: string) => {
@@ -1126,6 +1352,13 @@ export function App() {
               <p className="eyebrow">gitorc dashboard</p>
               <h2>Projects, delivery, runtime, and trust in one control plane</h2>
               <p className="lede">The overview now behaves like a project operations home: create projects, inspect repositories, run CI, deploy builds, and trace every action through its signed identity chain.</p>
+              {authSession ? (
+                <div className="dashboard-operator-strip">
+                  <span className="identity-chip">{authSession.user.role}</span>
+                  <span>{authSession.user.full_name}</span>
+                  <span>{authSession.user.rbac_realm}</span>
+                </div>
+              ) : null}
             </div>
             <div className="header-actions">
               <button className="button button-primary" onClick={() => setToast('Create project requests will be sent through the gateway when mutation endpoints are enabled.')} type="button">
@@ -1137,7 +1370,28 @@ export function App() {
               <button className="button button-ghost" onClick={() => navigateTo('deployments', selectedRepository.id)} type="button">
                 Deploy build
               </button>
+              {authSession ? (
+                <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
+                  Sign out
+                </button>
+              ) : null}
             </div>
+          </section>
+
+          <section className="dashboard-shortcut-grid">
+            {dashboardShortcutCards.map((card) => (
+              <article key={card.title} className="panel dashboard-shortcut-card">
+                <span className="dashboard-shortcut-icon"><LandingIcon icon={card.icon} /></span>
+                <div>
+                  <p className="section-kicker">Dashboard access</p>
+                  <h3>{card.title}</h3>
+                  <p>{card.description}</p>
+                </div>
+                <button className="button button-ghost" onClick={card.onClick} type="button">
+                  {card.actionLabel}
+                </button>
+              </article>
+            ))}
           </section>
 
           <section className="metrics-grid metrics-grid-compact">
@@ -1674,7 +1928,7 @@ export function App() {
     return (
       <div className={`landing-shell landing-theme-${landingTheme}`}>
         <header className="landing-header">
-          <button className="landing-brand" onClick={() => selectLandingPage('landing-overview')} type="button">
+          <button className="landing-brand" onClick={() => navigatePublic('home')} type="button">
             <span className="landing-brand-mark"><LandingSystemMark /></span>
             <span className="landing-brand-copy">
               <strong>GITORC</strong>
@@ -1684,21 +1938,14 @@ export function App() {
 
           <nav className="landing-header-nav" aria-label="Landing page navigation">
             {landingHeaderLinks.map((link) => {
-              if (link.external && link.href) {
-                return (
-                  <a key={link.label} className="landing-nav-link" href={link.href} rel="noreferrer" target="_blank">
-                    {link.label}
-                  </a>
-                );
-              }
-
               return (
                 <button
                   key={link.label}
                   className="landing-nav-link"
-                  onClick={() => link.targetId && selectLandingPage(link.targetId)}
+                  onClick={() => navigatePublic(link.publicPage || 'platform', link.targetId)}
                   type="button"
                 >
+                  <span className="landing-nav-icon"><LandingIcon icon={link.icon} /></span>
                   {link.label}
                 </button>
               );
@@ -1727,8 +1974,75 @@ export function App() {
               <LandingIcon icon="theme" />
             </button>
 
-            <button aria-label="Profile controls" className="landing-icon-button" type="button">
-              <LandingIcon icon="profile" />
+            <button aria-label="Login to dashboard" className="landing-icon-button" onClick={() => navigatePublic('signin')} type="button">
+              <LandingIcon icon="login" />
+            </button>
+          </div>
+        </header>
+
+        <section className="landing-hero-shell">
+          <article className="landing-hero-panel">
+            <p className="eyebrow">Identity-driven Git + CI/CD automation</p>
+            <h1>GITORC</h1>
+            <p className="landing-hero-tagline">Identity-Driven CI/CD Automation Platform.</p>
+            <p className="lede">A standard, professional developer platform for repositories, pipelines, RBAC-governed access, and control-plane operations.</p>
+            <div className="landing-hero-actions">
+              <a className="button button-ghost" href="https://github.com/AtonixCorp/gitorc" rel="noreferrer" target="_blank">Open repository</a>
+              <button className="button button-primary" onClick={() => navigatePublic('platform', 'platform-overview')} type="button">Open control panel</button>
+              <button className="button button-ghost" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
+            </div>
+          </article>
+        </section>
+      </div>
+    );
+  };
+
+  const renderPlatformPage = () => {
+    return (
+      <div className={`landing-shell landing-theme-${landingTheme}`}>
+        <header className="landing-header">
+          <button className="landing-brand" onClick={() => navigatePublic('home')} type="button">
+            <span className="landing-brand-mark"><LandingSystemMark /></span>
+            <span className="landing-brand-copy">
+              <strong>GITORC</strong>
+              <span>Standard platform</span>
+            </span>
+          </button>
+
+          <nav className="landing-header-nav" aria-label="Platform navigation">
+            {landingHeaderLinks.map((link) => (
+              <button
+                key={link.label}
+                className="landing-nav-link"
+                onClick={() => navigatePublic(link.publicPage || 'platform', link.targetId)}
+                type="button"
+              >
+                <span className="landing-nav-icon"><LandingIcon icon={link.icon} /></span>
+                {link.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="landing-header-controls">
+            <form className="landing-search" onSubmit={handleLandingSearch}>
+              <span className="landing-search-icon"><LandingIcon icon="search" /></span>
+              <input
+                aria-label="Search platform pages"
+                onChange={(event) => setLandingQuery(event.target.value)}
+                placeholder="Search docs, workflows, support"
+                type="search"
+                value={landingQuery}
+              />
+              <button className="landing-control-button" type="submit">Search</button>
+            </form>
+
+            <button
+              aria-label="Toggle landing theme"
+              className="landing-icon-button"
+              onClick={() => setLandingTheme((current) => (current === 'graphite' ? 'paper' : 'graphite'))}
+              type="button"
+            >
+              <LandingIcon icon="theme" />
             </button>
           </div>
         </header>
@@ -1765,9 +2079,10 @@ export function App() {
                   <p className="lede">{activeLandingPageDefinition.intro}</p>
                 </div>
                 <div className="landing-page-actions">
-                  <button className="button button-primary" onClick={() => navigatePublic('signin')} type="button">Open control plane</button>
+                  <button className="button button-primary" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
                   <a className="button button-ghost" href="https://github.com/AtonixCorp/gitorc" rel="noreferrer" target="_blank">Open repository</a>
-                  <button className="button button-ghost" onClick={() => selectLandingPage('bootstrap-locally')} type="button">Bootstrap locally</button>
+                  <button className="button button-ghost" onClick={() => navigatePublic('platform', 'changelog-releases')} type="button">View changelog</button>
+                  <button className="button button-ghost" onClick={() => navigatePublic('platform', 'discord-channels')} type="button">Join community</button>
                 </div>
               </div>
 
@@ -1813,14 +2128,53 @@ export function App() {
     return (
       <section className="signin-shell">
         <article className="panel signin-panel">
-          <p className="eyebrow">control plane access</p>
-          <h1 className="signin-title">Access the operator workspace through your authenticated deployment boundary.</h1>
+          <p className="eyebrow">login & identity gate</p>
+          <div className="signin-title-row">
+            <span className="signin-icon"><LandingIcon icon="login" /></span>
+            <h1 className="signin-title">Login before dashboard access.</h1>
+          </div>
           <p className="lede">
-            The public site is intentionally informational. Repository actions, review policy, CI orchestration, release operations,
-            and runtime oversight belong in the authenticated gitorc control plane provisioned inside your environment.
+            GITORC exposes the dashboard only through authenticated identity and RBAC policy. Repository actions, CI/CD execution,
+            control-panel operations, and runtime oversight belong behind that access boundary.
           </p>
+          <div className="signin-badges">
+            <span className="landing-section-chip">Identity required</span>
+            <span className="landing-section-chip">RBAC enforced</span>
+            <span className="landing-section-chip">Dashboard gated</span>
+          </div>
+          <form className="signin-form" onSubmit={handleLoginSubmit}>
+            <label>
+              Operator username
+              <input
+                autoComplete="username"
+                onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
+                type="text"
+                value={loginForm.username}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                autoComplete="current-password"
+                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                type="password"
+                value={loginForm.password}
+              />
+            </label>
+            {authError ? <p className="signin-error">{authError}</p> : null}
+            <div className="hero-actions">
+              <button className="button button-primary" disabled={authSubmitting || authChecking} type="submit">
+                {authSubmitting ? 'Signing in…' : 'Sign in to dashboard'}
+              </button>
+              {authSession ? (
+                <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
+                  Sign out current session
+                </button>
+              ) : null}
+            </div>
+          </form>
           <div className="hero-actions">
-            <button className="button button-primary" type="button">Private access required</button>
+            <button className="button button-ghost" onClick={() => navigatePublic('platform', 'platform-overview')} type="button">Open control panel info</button>
             <button className="button button-ghost" onClick={() => navigatePublic('home')} type="button">Back to landing page</button>
           </div>
         </article>
@@ -1830,21 +2184,25 @@ export function App() {
             <div className="section-heading compact-heading">
               <div>
                 <p className="section-kicker">Expected operator flow</p>
-                <h2>What opens after sign-in</h2>
+                <h2>What opens after login</h2>
               </div>
             </div>
             <div className="trace-grid">
               <article className="trace-card">
-                <h3>Projects and repositories</h3>
-                <p>Create projects, inspect connected providers, and start clone or review actions.</p>
+                <h3>Repository access</h3>
+                <p>Inspect connected providers, source inventory, clone operations, and review gates.</p>
               </article>
               <article className="trace-card">
-                <h3>Pipelines and deployments</h3>
-                <p>Run CI, inspect stage health, promote artifacts, and manage rollbacks.</p>
+                <h3>First pipeline</h3>
+                <p>Launch the 10-minute quickstart, inspect stage health, and move through governed delivery.</p>
               </article>
               <article className="trace-card">
-                <h3>Runtime and trust</h3>
-                <p>Trace live processes, security posture, attestations, and signed operational events.</p>
+                <h3>Control panel</h3>
+                <p>Open infra management, runtime visibility, signed events, and trust-state controls.</p>
+              </article>
+              <article className="trace-card">
+                <h3>Community, docs, and APIs</h3>
+                <p>Keep community channels, developer documentation, and API reference inside the same platform frame.</p>
               </article>
             </div>
           </article>
@@ -1852,25 +2210,25 @@ export function App() {
           <article className="panel stack-panel">
             <div className="section-heading compact-heading">
               <div>
-                <p className="section-kicker">Local bootstrap</p>
-                <h2>Before opening the workspace</h2>
+                <p className="section-kicker">Identity directive</p>
+                <h2>Approved operator profiles</h2>
               </div>
             </div>
             <div className="landing-steps signin-steps">
               <article className="trace-card">
                 <span className="step-index">1</span>
-                <h3>Provision access</h3>
-                <p>Expose the operator surface only inside the approved deployment boundary for your team.</p>
+                <h3>Platform admin</h3>
+                <p><strong>platform-admin</strong> with password <strong>gitorc-demo</strong> receives control-panel administration rights.</p>
               </article>
               <article className="trace-card">
                 <span className="step-index">2</span>
-                <h3>Enforce policy</h3>
-                <p>Connect repository, review, CI/CD, and operational controls to the organization’s security model.</p>
+                <h3>Release operator</h3>
+                <p><strong>release-operator</strong> with password <strong>gitorc-demo</strong> receives release-lane permissions for CI/CD and deployment actions.</p>
               </article>
               <article className="trace-card">
                 <span className="step-index">3</span>
-                <h3>Operate with confidence</h3>
-                <p>Use the authenticated workspace for governed delivery workflows and runtime decision making.</p>
+                <h3>RBAC session</h3>
+                <p>Sessions are issued by the gateway and required for dashboard data, so repository, pipeline, and control-panel access stay behind the login gate.</p>
               </article>
             </div>
           </article>
@@ -1910,6 +2268,7 @@ export function App() {
       {toast ? <section className="panel toast-panel">{toast}</section> : null}
 
       {isLoading ? <section className="panel loading-panel">Loading gateway data…</section> : null}
+      {!isLoading && authChecking ? <section className="panel loading-panel">Restoring secure session…</section> : null}
       {error ? (
         <section className="panel loading-panel">
           <h2>Gateway connection failed</h2>
@@ -1919,8 +2278,9 @@ export function App() {
       ) : null}
 
       {!isLoading && !error && publicLandingMode && publicPage === 'home' ? renderLandingPage() : null}
-      {!isLoading && !error && publicLandingMode && publicPage === 'signin' ? renderSignInPage() : null}
-      {!isLoading && !error && !publicLandingMode ? renderScreen() : null}
+      {!isLoading && !error && publicLandingMode && publicPage === 'platform' ? renderPlatformPage() : null}
+      {!isLoading && !error && (publicLandingMode ? publicPage === 'signin' : !authSession && !authChecking) ? renderSignInPage() : null}
+      {!isLoading && !error && !publicLandingMode && authSession ? renderScreen() : null}
     </main>
   );
 }

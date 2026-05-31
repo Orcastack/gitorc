@@ -195,6 +195,17 @@ body {
   justify-content: center;
 }
 
+.landing-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-nav-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
 .landing-header-controls {
   flex: 0 0 auto;
 }
@@ -211,6 +222,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.35rem;
   min-height: 32px;
   padding: 0.35rem 0.45rem;
   border: 0;
@@ -264,6 +276,40 @@ body {
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 0.75rem;
   align-items: start;
+}
+
+.landing-hero-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 5.5rem);
+  padding: 2rem 0 4rem;
+}
+
+.landing-hero-panel {
+  width: min(920px, 100%);
+  padding: 2rem 0;
+}
+
+.landing-hero-panel h1,
+.landing-page-hero h1 {
+  max-width: 14ch;
+  color: var(--landing-text);
+}
+
+.landing-hero-tagline {
+  margin: 0 0 1rem;
+  font-size: clamp(1.35rem, 2.3vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  color: var(--landing-text);
+}
+
+.landing-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
 }
 
 .landing-sidebar {
@@ -460,6 +506,28 @@ body {
   color: var(--landing-muted);
 }
 
+.landing-shell .eyebrow {
+  color: var(--landing-soft);
+}
+
+.landing-shell .lede,
+.landing-shell p,
+.landing-shell li {
+  color: var(--landing-muted);
+}
+
+.landing-shell .button {
+  border-color: var(--landing-line-strong);
+  color: var(--landing-text);
+  background: color-mix(in srgb, var(--landing-panel) 78%, transparent);
+}
+
+.landing-shell .button-primary {
+  background: var(--landing-text);
+  color: var(--landing-bg);
+  border-color: var(--landing-text);
+}
+
 .landing-link-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -615,8 +683,79 @@ body {
   padding: 1.8rem;
 }
 
+.signin-title-row,
+.signin-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.signin-form,
+.signin-form label {
+  display: flex;
+  flex-direction: column;
+}
+
+.signin-title-row {
+  gap: 0.9rem;
+  margin-bottom: 0.85rem;
+}
+
+.signin-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.signin-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.signin-badges {
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.signin-form {
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.signin-form label {
+  gap: 0.45rem;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.signin-form input {
+  min-height: 46px;
+  padding: 0.8rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.signin-form input:focus {
+  outline: 1px solid rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.signin-error {
+  margin-bottom: 0;
+  color: #ffb4b4;
+}
+
 .signin-title {
-  max-width: 13ch;
+  max-width: 11ch;
+  margin-bottom: 0;
 }
 
 .signin-steps {
@@ -720,6 +859,39 @@ h1 {
   gap: 1rem;
 }
 
+.dashboard-shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-shortcut-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.dashboard-shortcut-card h3,
+.dashboard-shortcut-card p {
+  margin-bottom: 0;
+}
+
+.dashboard-shortcut-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-shortcut-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 .gitlab-sidebar {
   align-self: start;
   position: sticky;
@@ -776,6 +948,15 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.dashboard-operator-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 1rem;
+  color: var(--ink);
 }
 
 .stack-panel {

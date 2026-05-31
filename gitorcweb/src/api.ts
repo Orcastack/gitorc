@@ -146,6 +146,29 @@ export type Overview = {
   activity: string[];
 };
 
+export type AuthUser = {
+  username: string;
+  full_name: string;
+  email: string;
+  role: string;
+  identity: string;
+  rbac_realm: string;
+  permissions: string[];
+};
+
+export type AuthSession = {
+  token?: string;
+  user: AuthUser;
+  expires_at: string;
+};
+
+type RequestOptions = {
+  signal?: AbortSignal;
+  token?: string | null;
+  method?: 'GET' | 'POST';
+  body?: unknown;
+};
+
 const configuredGatewayBase = import.meta.env.VITE_GITORC_GATEWAY_URL;
 
 function isLocalHostname(hostname: string) {
@@ -184,20 +207,46 @@ const gatewayCandidates = resolveGatewayCandidates();
 
 let lastResolvedGatewayBase = gatewayCandidates[0] ?? 'gateway unavailable';
 
-export async function fetchOverview(signal?: AbortSignal): Promise<Overview> {
+async function requestGateway<T>(path: string, options: RequestOptions = {}): Promise<T> {
   let lastError: Error | null = null;
 
   for (const base of gatewayCandidates) {
     try {
-      const response = await fetch(`${base}/api/overview`, { signal });
+      const headers = new Headers();
+      if (options.body !== undefined) {
+        headers.set('Content-Type', 'application/json');
+      }
+      if (options.token) {
+        headers.set('Authorization', `Bearer ${options.token}`);
+      }
+
+      const response = await fetch(`${base}${path}`, {
+        signal: options.signal,
+        method: options.method || 'GET',
+        headers,
+        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      });
+
       if (!response.ok) {
-        throw new Error(`Gateway returned ${response.status}`);
+        let message = `Gateway returned ${response.status}`;
+        try {
+          const payload = (await response.json()) as { error?: string };
+          if (payload.error) {
+            message = payload.error;
+          }
+        } catch {
+          // Ignore JSON parse failures for non-JSON responses.
+        }
+        throw new Error(message);
       }
 
       lastResolvedGatewayBase = base;
-      return response.json() as Promise<Overview>;
+      if (response.status === 204) {
+        return undefined as T;
+      }
+      return response.json() as Promise<T>;
     } catch (error) {
-      if (signal?.aborted) {
+      if (options.signal?.aborted) {
         throw error;
       }
       lastError = error instanceof Error ? error : new Error('Unknown gateway error');
@@ -205,6 +254,30 @@ export async function fetchOverview(signal?: AbortSignal): Promise<Overview> {
   }
 
   throw lastError ?? new Error('Failed to reach any configured gateway endpoint');
+}
+
+export async function fetchOverview(signal?: AbortSignal, token?: string | null): Promise<Overview> {
+  return requestGateway<Overview>('/api/overview', { signal, token });
+}
+
+export async function login(username: string, password: string, signal?: AbortSignal): Promise<AuthSession> {
+  return requestGateway<AuthSession>('/api/auth/login', {
+    signal,
+    method: 'POST',
+    body: { username, password },
+  });
+}
+
+export async function fetchSession(token: string, signal?: AbortSignal): Promise<AuthSession> {
+  return requestGateway<AuthSession>('/api/auth/session', { signal, token });
+}
+
+export async function logout(token: string, signal?: AbortSignal): Promise<void> {
+  await requestGateway<void>('/api/auth/logout', {
+    signal,
+    token,
+    method: 'POST',
+  });
 }
 
 export function getGatewayBase() {
