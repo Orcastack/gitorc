@@ -925,6 +925,7 @@ export function App() {
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
   const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
   const [landingQuery, setLandingQuery] = useState('');
+  const [landingHeroPointer, setLandingHeroPointer] = useState({ x: 50, y: 50 });
   const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
   const workspaceHasData = hasWorkspaceData(overview);
 
@@ -2376,6 +2377,29 @@ export function App() {
   };
 
   const renderLandingPage = () => {
+    const heroBackgroundStyle = {
+      '--landing-hero-pointer-x': `${landingHeroPointer.x}%`,
+      '--landing-hero-pointer-y': `${landingHeroPointer.y}%`,
+      '--landing-hero-drift-x': `${(landingHeroPointer.x - 50) * 0.18}px`,
+      '--landing-hero-drift-y': `${(landingHeroPointer.y - 50) * 0.16}px`,
+      '--landing-hero-tilt-x': `${(50 - landingHeroPointer.y) * 0.05}deg`,
+      '--landing-hero-tilt-y': `${(landingHeroPointer.x - 50) * 0.05}deg`,
+    } as React.CSSProperties;
+
+    const handleLandingHeroPointerMove = (event: React.PointerEvent<HTMLElement>) => {
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+      const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+      setLandingHeroPointer({
+        x: Math.min(100, Math.max(0, x)),
+        y: Math.min(100, Math.max(0, y)),
+      });
+    };
+
+    const resetLandingHeroPointer = () => {
+      setLandingHeroPointer({ x: 50, y: 50 });
+    };
+
     return (
       <div className={`landing-shell landing-theme-${landingTheme}`}>
         <header className="landing-header">
@@ -2431,8 +2455,8 @@ export function App() {
           </div>
         </header>
 
-        <section className="landing-hero-shell">
-          <div aria-hidden="true" className="landing-hero-background">
+        <section className="landing-hero-shell" onPointerLeave={resetLandingHeroPointer} onPointerMove={handleLandingHeroPointerMove}>
+          <div aria-hidden="true" className="landing-hero-background" style={heroBackgroundStyle}>
             <div className="landing-hero-orb landing-hero-orb-primary" />
             <div className="landing-hero-orb landing-hero-orb-secondary" />
             <div className="landing-hero-grid-plane" />
