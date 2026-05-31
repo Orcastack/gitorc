@@ -517,7 +517,6 @@ const landingHeaderLinks: LandingHeaderLink[] = [
   { label: 'Repository', icon: 'repository', targetId: 'repository-role', publicPage: 'platform' },
   { label: 'Docs', icon: 'docs', targetId: 'docs-inventory', publicPage: 'platform' },
   { label: 'Community', icon: 'community', targetId: 'developer-community', publicPage: 'platform' },
-  { label: 'Login', icon: 'login', publicPage: 'signin' },
 ];
 
 function isLandingPageId(value: string): value is LandingPageId {
