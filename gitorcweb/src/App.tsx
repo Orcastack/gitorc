@@ -3,12 +3,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   createRepository,
   fetchSession,
+  fetchSignupRequests,
   fetchOverview,
   getGatewayBase,
   importRepository,
   isStaticOverviewMode,
   login,
   logout,
+  reviewSignupRequest,
   signup,
   type AuthSession,
   type CloneOperation,
@@ -23,6 +25,7 @@ import {
   type RepositoryMutationResult,
   type Review,
   type SecurityState,
+  type SignupRequestRecord,
 } from './api';
 
 type LandingPageId =
@@ -750,6 +753,7 @@ const routeTabs = [
   { id: 'pipelines', label: 'Pipelines' },
   { id: 'deployments', label: 'Deployments' },
   { id: 'containers', label: 'Containers' },
+  { id: 'access', label: 'Access requests' },
 ] as const;
 
 type RouteName = (typeof routeTabs)[number]['id'];
@@ -868,13 +872,13 @@ function formatTime(value: string) {
 }
 
 function statusClass(status: string) {
-  if (['running', 'passed', 'completed', 'connected', 'primary', 'success', 'verified'].includes(status)) {
+  if (['running', 'passed', 'completed', 'connected', 'primary', 'success', 'verified', 'approved'].includes(status)) {
     return 'tone-success';
   }
-  if (['pending', 'queued', 'ready', 'review-gated', 'standby'].includes(status)) {
+  if (['pending', 'pending_review', 'queued', 'ready', 'review-gated', 'standby'].includes(status)) {
     return 'tone-warn';
   }
-  if (['failed', 'crashed', 'blocked', 'rolling-back', 'changes-requested', 'stopped'].includes(status)) {
+  if (['failed', 'crashed', 'blocked', 'rolling-back', 'changes-requested', 'stopped', 'rejected'].includes(status)) {
     return 'tone-danger';
   }
   return 'tone-neutral';
@@ -927,7 +931,16 @@ export function App() {
   const [landingQuery, setLandingQuery] = useState('');
   const [landingHeroPointer, setLandingHeroPointer] = useState({ x: 50, y: 50 });
   const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
+  const [signupRequests, setSignupRequests] = useState<SignupRequestRecord[]>([]);
+  const [signupRequestsLoading, setSignupRequestsLoading] = useState(false);
+  const [signupRequestsError, setSignupRequestsError] = useState<string | null>(null);
+  const [reviewingSignupRequestId, setReviewingSignupRequestId] = useState<string | null>(null);
   const workspaceHasData = hasWorkspaceData(overview);
+  const isPlatformAdmin = authSession?.user.role === 'platform-admin' || authSession?.user.permissions.includes('control-panel:admin') || false;
+  const availableRouteTabs = useMemo(
+    () => routeTabs.filter((tab) => tab.id !== 'access' || isPlatformAdmin),
+    [isPlatformAdmin],
+  );
 
   const loadOverview = async (signal?: AbortSignal) => {
     const payload = await fetchOverview(signal, authSession?.token ?? authToken);
@@ -1053,6 +1066,45 @@ export function App() {
       }
     };
   }, [authSession?.token, publicLandingMode]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (publicLandingMode || !authSession?.token || !isPlatformAdmin) {
+      setSignupRequests([]);
+      setSignupRequestsError(null);
+      setSignupRequestsLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setSignupRequestsLoading(true);
+    setSignupRequestsError(null);
+
+    void fetchSignupRequests(authSession.token)
+      .then((requests) => {
+        if (!active) {
+          return;
+        }
+        setSignupRequests(requests);
+      })
+      .catch((requestError) => {
+        if (!active) {
+          return;
+        }
+        setSignupRequestsError(requestError instanceof Error ? requestError.message : 'Failed to load signup requests.');
+      })
+      .finally(() => {
+        if (active) {
+          setSignupRequestsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authSession?.token, isPlatformAdmin, publicLandingMode]);
 
   useEffect(() => {
     if (!toast) {
@@ -1181,6 +1233,27 @@ export function App() {
   const navigateTo = (name: RouteName, repositoryId?: string) => {
     window.location.hash = toHash(name, repositoryId);
     setRoute({ name, repositoryId });
+  };
+
+  const handleSignupRequestReview = async (request: SignupRequestRecord, status: 'approved' | 'rejected') => {
+    if (!authSession?.token) {
+      return;
+    }
+
+    const note = status === 'rejected'
+      ? window.prompt(`Add a rejection note for ${request.username}`, request.review_note || '') ?? ''
+      : window.prompt(`Optional approval note for ${request.username}`, request.review_note || '') ?? '';
+
+    setReviewingSignupRequestId(request.id);
+    try {
+      const updated = await reviewSignupRequest(request.id, status, note.trim(), authSession.token);
+      setSignupRequests((current) => current.map((entry) => (entry.id === updated.id ? updated : entry)));
+      setToast(`${request.username} request ${status}.`);
+    } catch (reviewError) {
+      setToast(reviewError instanceof Error ? reviewError.message : 'Signup request review failed.');
+    } finally {
+      setReviewingSignupRequestId(null);
+    }
   };
 
   const navigatePublic = (page: PublicPage, pageId?: LandingPageId) => {
@@ -1618,11 +1691,11 @@ export function App() {
         <aside className="gitlab-sidebar panel">
           <div className="sidebar-group">
             <p className="section-kicker">Workspace sections</p>
-            {routeTabs.map((tab) => (
+            {availableRouteTabs.map((tab) => (
               <button
                 key={tab.id}
                 className={`button ${route.name === tab.id ? 'button-primary' : 'button-ghost'} sidebar-button`}
-                onClick={() => navigateTo(tab.id, selectedRepository.id)}
+                onClick={() => navigateTo(tab.id, tab.id === 'access' ? undefined : selectedRepository.id)}
                 type="button"
               >
                 {tab.label}
@@ -1907,6 +1980,70 @@ export function App() {
               ))}
             </div>
           </section>
+        </div>
+      </section>
+    );
+  };
+
+  const renderAccessReviewScreen = () => {
+    const repositoryForNavigation = selectedRepository?.id ?? overview?.repositories[0]?.id;
+
+    return (
+      <section className="gitlab-shell">
+        <aside className="gitlab-sidebar panel">
+          <div className="sidebar-group">
+            <p className="section-kicker">Workspace sections</p>
+            {availableRouteTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`button ${route.name === tab.id ? 'button-primary' : 'button-ghost'} sidebar-button`}
+                onClick={() => navigateTo(tab.id, tab.id === 'access' ? undefined : repositoryForNavigation)}
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {overview?.repositories.length ? (
+            <div className="sidebar-group">
+              <p className="section-kicker">Tracked projects</p>
+              <div className="project-nav-list">
+                {overview.repositories.map((repository) => (
+                  <button
+                    key={repository.id}
+                    className={`project-nav-item ${selectedRepository?.id === repository.id ? 'project-nav-item-active' : ''}`}
+                    onClick={() => {
+                      setFocus({ kind: 'repository', id: repository.id });
+                      navigateTo('overview', repository.id);
+                    }}
+                    type="button"
+                  >
+                    <strong>{repository.name}</strong>
+                    <span>{repository.provider_id}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </aside>
+
+        <div className="gitlab-main">
+          <section className="gitlab-header panel">
+            <div>
+              <p className="eyebrow">gitorc dashboard</p>
+              <h2>Access requests and administrator approvals</h2>
+              <p className="lede">Review pending signup requests, approve access for operators, or reject requests with an audit note.</p>
+            </div>
+            <div className="header-actions">
+              {authSession ? (
+                <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
+                  Sign out
+                </button>
+              ) : null}
+            </div>
+          </section>
+
+          {renderSignupRequestsPanel()}
         </div>
       </section>
     );
@@ -2754,7 +2891,96 @@ export function App() {
 
   const renderSignUpPage = () => renderAuthPage('signup');
 
+  const renderSignupRequestsPanel = () => {
+    const pendingCount = signupRequests.filter((request) => request.status === 'pending_review').length;
+    const approvedCount = signupRequests.filter((request) => request.status === 'approved').length;
+    const rejectedCount = signupRequests.filter((request) => request.status === 'rejected').length;
+
+    return (
+      <>
+        <section className="metrics-grid metrics-grid-compact">
+          <article className="metric-card metric-card-compact">
+            <p>Pending requests</p>
+            <strong>{pendingCount}</strong>
+            <span>Awaiting administrator review</span>
+          </article>
+          <article className="metric-card metric-card-compact">
+            <p>Approved</p>
+            <strong>{approvedCount}</strong>
+            <span>Access requests approved</span>
+          </article>
+          <article className="metric-card metric-card-compact">
+            <p>Rejected</p>
+            <strong>{rejectedCount}</strong>
+            <span>Access requests declined</span>
+          </article>
+        </section>
+
+        <section className="panel stack-panel dashboard-block">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">Administrator review</p>
+              <h2>Signup requests</h2>
+            </div>
+            <span className="status-badge status-primary">{signupRequests.length} total</span>
+          </div>
+
+          {signupRequestsLoading ? <p>Loading signup requests…</p> : null}
+          {signupRequestsError ? <p>{signupRequestsError}</p> : null}
+          {!signupRequestsLoading && !signupRequestsError && signupRequests.length === 0 ? <p>No signup requests are waiting for review.</p> : null}
+
+          {!signupRequestsLoading && !signupRequestsError && signupRequests.length > 0 ? (
+            <div className="table-shell">
+              <div className="table-head table-projects">
+                <span>Requester</span>
+                <span>Email</span>
+                <span>Status</span>
+                <span>Submitted</span>
+                <span>Reviewed</span>
+                <span>Actions</span>
+              </div>
+              {signupRequests.map((request) => (
+                <div key={request.id} className="table-row table-projects">
+                  <div>
+                    <strong>{request.username}</strong>
+                    <p>{request.review_note || 'Awaiting review note.'}</p>
+                  </div>
+                  <span>{request.email}</span>
+                  <span className={`mini-badge ${statusClass(request.status)}`}>{formatStatus(request.status)}</span>
+                  <span>{formatTime(request.created_at)}</span>
+                  <span>{request.reviewed_at ? `${formatTime(request.reviewed_at)}${request.reviewed_by ? ` by ${request.reviewed_by}` : ''}` : 'Pending'}</span>
+                  <div className="table-actions">
+                    <button
+                      className="button button-primary"
+                      disabled={reviewingSignupRequestId === request.id || request.status === 'approved'}
+                      onClick={() => void handleSignupRequestReview(request, 'approved')}
+                      type="button"
+                    >
+                      {reviewingSignupRequestId === request.id ? 'Saving…' : 'Approve'}
+                    </button>
+                    <button
+                      className="button button-ghost"
+                      disabled={reviewingSignupRequestId === request.id || request.status === 'rejected'}
+                      onClick={() => void handleSignupRequestReview(request, 'rejected')}
+                      type="button"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      </>
+    );
+  };
+
   const renderScreen = () => {
+    if (route.name === 'access') {
+      return isPlatformAdmin ? renderAccessReviewScreen() : null;
+    }
+
     if (!overview) {
       return null;
     }

@@ -1,6 +1,7 @@
 package gatewayapi
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const authSessionTTL = 12 * time.Hour
@@ -207,6 +210,8 @@ type Metric struct {
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/auth/login", handleLogin)
 	mux.HandleFunc("/api/auth/signup", handleSignup)
+	mux.HandleFunc("/api/auth/signup-requests", requireAuth(handleSignupRequests))
+	mux.HandleFunc("/api/auth/signup-requests/", requireAuth(handleSignupRequestReview))
 	mux.HandleFunc("/api/auth/session", handleSession)
 	mux.HandleFunc("/api/auth/logout", handleLogout)
 	mux.HandleFunc("/git/", serveGitHTTP)
@@ -332,9 +337,21 @@ func handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestID, err := generateToken()
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, errors.New("failed to register account request"))
+	requestID := uuid.NewString()
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := createSignupRequestRecord(ctx, signupRequestRecord{
+		ID:       requestID,
+		Username: username,
+		Email:    email,
+		Status:   "pending_review",
+	}); err != nil {
+		status := http.StatusInternalServerError
+		if isConflictError(err) || strings.Contains(strings.ToLower(err.Error()), "duplicate") {
+			status = http.StatusConflict
+		}
+		writeError(w, status, err)
 		return
 	}
 
@@ -343,6 +360,74 @@ func handleSignup(w http.ResponseWriter, r *http.Request) {
 		Status:    "pending_review",
 		Message:   "Account request submitted for administrator review.",
 	})
+}
+
+func handleSignupRequests(w http.ResponseWriter, r *http.Request, session sessionRecord) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	if !isAdminSession(session) {
+		writeError(w, http.StatusForbidden, errors.New("administrator access is required"))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	requests, err := listSignupRequestRecords(ctx)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	writeJSON(w, requests)
+}
+
+func handleSignupRequestReview(w http.ResponseWriter, r *http.Request, session sessionRecord) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	if !isAdminSession(session) {
+		writeError(w, http.StatusForbidden, errors.New("administrator access is required"))
+		return
+	}
+
+	requestID := strings.TrimPrefix(r.URL.Path, "/api/auth/signup-requests/")
+	requestID = strings.TrimSuffix(requestID, "/review")
+	requestID = strings.Trim(requestID, "/")
+	if requestID == "" {
+		writeError(w, http.StatusBadRequest, errors.New("signup request id is required"))
+		return
+	}
+
+	var decision signupDecisionRequest
+	if err := decodeJSON(r, &decision); err != nil {
+		writeError(w, http.StatusBadRequest, errors.New("invalid signup review payload"))
+		return
+	}
+
+	decision.Status = strings.TrimSpace(decision.Status)
+	if decision.Status != "approved" && decision.Status != "rejected" {
+		writeError(w, http.StatusBadRequest, errors.New("signup request status must be approved or rejected"))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	updated, err := reviewSignupRequestRecord(ctx, requestID, session.User.Username, decision)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "not found") {
+			status = http.StatusNotFound
+		}
+		writeError(w, status, err)
+		return
+	}
+
+	writeJSON(w, updated)
 }
 
 func handleSession(w http.ResponseWriter, r *http.Request) {
@@ -504,4 +589,16 @@ func writeJSONStatus(w http.ResponseWriter, status int, payload any) {
 
 func isConflictError(err error) bool {
 	return strings.Contains(err.Error(), "already exists")
+}
+
+func isAdminSession(session sessionRecord) bool {
+	if session.User.Role == "platform-admin" {
+		return true
+	}
+	for _, permission := range session.User.Permissions {
+		if permission == "control-panel:admin" {
+			return true
+		}
+	}
+	return false
 }

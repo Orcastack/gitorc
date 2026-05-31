@@ -174,6 +174,17 @@ export type SignupRequestResult = {
   message: string;
 };
 
+export type SignupRequestRecord = {
+  id: string;
+  username: string;
+  email: string;
+  status: string;
+  created_at: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  review_note?: string;
+};
+
 export type RepositoryMutationResult = {
   repository: Repository;
   clone_operation: CloneOperation;
@@ -307,6 +318,28 @@ export async function signup(input: SignupRequestInput, signal?: AbortSignal): P
       email: input.email,
       password: input.password,
     },
+  });
+}
+
+export async function fetchSignupRequests(token: string, signal?: AbortSignal): Promise<SignupRequestRecord[]> {
+  return requestGateway<SignupRequestRecord[]>('/api/auth/signup-requests', {
+    signal,
+    token,
+  });
+}
+
+export async function reviewSignupRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  note: string,
+  token: string,
+  signal?: AbortSignal,
+): Promise<SignupRequestRecord> {
+  return requestGateway<SignupRequestRecord>(`/api/auth/signup-requests/${id}`, {
+    signal,
+    token,
+    method: 'POST',
+    body: { status, note },
   });
 }
 
