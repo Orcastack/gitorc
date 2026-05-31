@@ -1,12 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import {
+  createRepository,
+  fetchSession,
   fetchOverview,
   getGatewayBase,
   importRepository,
   isStaticOverviewMode,
+  login,
+  logout,
+  type AuthSession,
   type CloneOperation,
   type Container,
+  type CreateRepositoryInput,
   type Deployment,
   type EventEntry,
   type ImportRepositoryInput,
@@ -634,7 +640,46 @@ type FocusState =
   | { kind: 'deployment'; id: string }
   | { kind: 'process'; id: string };
 
-type PublicPage = 'home' | 'signin';
+type ProjectFormMode = 'closed' | 'create' | 'import';
+
+type ProjectDraft = {
+  name: string;
+  summary: string;
+  defaultBranch: string;
+  sourceUrl: string;
+};
+
+type PublicPage = 'home' | 'platform' | 'signin';
+
+const authTokenStorageKey = 'gitorc.auth.token';
+
+const emptyProjectDraft: ProjectDraft = {
+  name: '',
+  summary: '',
+  defaultBranch: 'main',
+  sourceUrl: '',
+};
+
+function readStoredAuthToken() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(authTokenStorageKey);
+}
+
+function storeAuthToken(token: string | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (token) {
+    window.localStorage.setItem(authTokenStorageKey, token);
+    return;
+  }
+
+  window.localStorage.removeItem(authTokenStorageKey);
+}
 
 function readPublicPage(): PublicPage {
   if (typeof window === 'undefined') {
@@ -743,23 +788,21 @@ export function App() {
   const [eventKindFilter, setEventKindFilter] = useState<'all' | 'repository' | 'pipeline' | 'deployment' | 'process'>('all');
   const [eventRepositoryFilter, setEventRepositoryFilter] = useState<string>('all');
   const [activeGatewayBase, setActiveGatewayBase] = useState(getGatewayBase());
-<<<<<<< HEAD
   const [projectFormMode, setProjectFormMode] = useState<ProjectFormMode>('closed');
   const [projectDraft, setProjectDraft] = useState<ProjectDraft>(emptyProjectDraft);
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
+  const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
+  const [landingQuery, setLandingQuery] = useState('');
+  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
   const workspaceHasData = hasWorkspaceData(overview);
 
   const loadOverview = async (signal?: AbortSignal) => {
-    const payload = await fetchOverview(signal);
+    const payload = await fetchOverview(signal, authSession?.token ?? authToken);
     setOverview(payload);
     setActiveGatewayBase(getGatewayBase());
     setError(null);
     return payload;
   };
-=======
-  const [landingTheme, setLandingTheme] = useState<'graphite' | 'paper'>('graphite');
-  const [landingQuery, setLandingQuery] = useState('');
-  const [activeLandingPage, setActiveLandingPage] = useState<LandingPageId>('landing-overview');
 
   useEffect(() => {
     const onHashChange = () => {
@@ -2309,38 +2352,6 @@ export function App() {
                   <button className="button button-ghost" onClick={() => navigatePublic('platform', 'discord-channels')} type="button">Join community</button>
                 </div>
               </div>
-<<<<<<< HEAD
-            </div>
-            <div className="trace-grid">
-              <article className="trace-card">
-                <h3>Repository control</h3>
-                <ul>
-                  <li>Connected providers and repository inventory.</li>
-                  <li>Clone commands, push remotes, and review entrypoints.</li>
-                  <li>Commit and branch context tied to identity records.</li>
-                </ul>
-              </article>
-              <article className="trace-card">
-                <h3>Delivery orchestration</h3>
-                <ul>
-                  <li>Pipeline lanes with run history and gating state.</li>
-                  <li>Deployment lanes with rollback targets and artifact traceability.</li>
-                  <li>Environment and cluster rollout visibility.</li>
-                </ul>
-              </article>
-              <article className="trace-card">
-                <h3>Runtime trust</h3>
-                <ul>
-                  <li>Process identity, LDAP registration, RBAC verification.</li>
-                  <li>Attestation status for repositories, pipelines, and services.</li>
-                  <li>Live event stream and container state monitoring.</li>
-                </ul>
-              </article>
-            </div>
-          </article>
-=======
->>>>>>> 72cc85c6d9b0327cc632da15ca062b3728068d22
-
               <div className="landing-page-sections">
                 {activeLandingPageDefinition.sections.map((section) => (
                   <article key={section.title} className="landing-page-section">
