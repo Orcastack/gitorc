@@ -2432,6 +2432,25 @@ export function App() {
         </header>
 
         <section className="landing-hero-shell">
+          <div aria-hidden="true" className="landing-hero-background">
+            <div className="landing-hero-orb landing-hero-orb-primary" />
+            <div className="landing-hero-orb landing-hero-orb-secondary" />
+            <div className="landing-hero-grid-plane" />
+            <div className="landing-hero-grid-plane landing-hero-grid-plane-secondary" />
+            <div className="landing-hero-beam landing-hero-beam-left" />
+            <div className="landing-hero-beam landing-hero-beam-right" />
+            <div className="landing-hero-cube-cluster">
+              <span className="landing-hero-cube landing-hero-cube-large" />
+              <span className="landing-hero-cube landing-hero-cube-mid" />
+              <span className="landing-hero-cube landing-hero-cube-small" />
+            </div>
+            <div className="landing-hero-node-ring">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
           <article className="landing-hero-panel">
             <p className="eyebrow">Identity-driven Git + CI/CD automation</p>
             <h1>GITORC</h1>

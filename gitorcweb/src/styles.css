@@ -279,16 +279,264 @@ body {
 }
 
 .landing-hero-shell {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 5.5rem);
   padding: 2rem 0 4rem;
+  overflow: hidden;
 }
 
 .landing-hero-panel {
+  position: relative;
+  z-index: 1;
   width: min(920px, 100%);
   padding: 2rem 0;
+}
+
+.landing-hero-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 1400px;
+}
+
+.landing-hero-orb,
+.landing-hero-grid-plane,
+.landing-hero-beam,
+.landing-hero-cube,
+.landing-hero-node-ring,
+.landing-hero-node-ring span {
+  position: absolute;
+}
+
+.landing-hero-orb {
+  border-radius: 50%;
+  filter: blur(10px);
+  opacity: 0.65;
+}
+
+.landing-hero-orb-primary {
+  top: 8%;
+  right: 16%;
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, rgba(61, 139, 255, 0.32) 0%, rgba(61, 139, 255, 0.08) 42%, rgba(61, 139, 255, 0) 72%);
+}
+
+.landing-hero-orb-secondary {
+  right: 5%;
+  bottom: 3%;
+  width: 28rem;
+  height: 28rem;
+  background: radial-gradient(circle, rgba(66, 232, 184, 0.18) 0%, rgba(66, 232, 184, 0.06) 45%, rgba(66, 232, 184, 0) 74%);
+}
+
+.landing-hero-grid-plane {
+  left: 52%;
+  top: 10%;
+  width: min(52vw, 46rem);
+  height: 32rem;
+  border: 1px solid rgba(170, 180, 196, 0.14);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(18, 26, 38, 0.24), rgba(10, 16, 25, 0.02));
+  background-size: 2.6rem 2.6rem, 2.6rem 2.6rem, 100% 100%;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 40px 80px rgba(0, 0, 0, 0.35);
+  transform: rotateX(71deg) rotateZ(-30deg) translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  opacity: 0.78;
+}
+
+.landing-hero-grid-plane-secondary {
+  left: 63%;
+  top: 25%;
+  width: min(24vw, 18rem);
+  height: 18rem;
+  background-image:
+    linear-gradient(rgba(91, 212, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 212, 255, 0.14) 1px, transparent 1px);
+  background-size: 1.4rem 1.4rem;
+  border-color: rgba(91, 212, 255, 0.16);
+  opacity: 0.52;
+}
+
+.landing-hero-beam {
+  top: 16%;
+  width: 1px;
+  height: 18rem;
+  background: linear-gradient(180deg, rgba(94, 180, 255, 0), rgba(94, 180, 255, 0.62), rgba(94, 180, 255, 0));
+  box-shadow: 0 0 18px rgba(94, 180, 255, 0.5);
+  opacity: 0.65;
+}
+
+.landing-hero-beam-left {
+  left: 59%;
+  transform: rotate(24deg);
+}
+
+.landing-hero-beam-right {
+  right: 12%;
+  top: 22%;
+  height: 15rem;
+  transform: rotate(-18deg);
+}
+
+.landing-hero-cube-cluster {
+  position: absolute;
+  right: 16%;
+  top: 19%;
+  width: 18rem;
+  height: 18rem;
+  transform-style: preserve-3d;
+  transform: rotateX(62deg) rotateZ(-28deg);
+}
+
+.landing-hero-cube {
+  border: 1px solid rgba(167, 216, 255, 0.16);
+  background:
+    linear-gradient(145deg, rgba(122, 168, 255, 0.3), rgba(14, 20, 31, 0.05)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset -10px -10px 18px rgba(9, 13, 22, 0.3);
+}
+
+.landing-hero-cube::before,
+.landing-hero-cube::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: inherit;
+}
+
+.landing-hero-cube::before {
+  background: linear-gradient(180deg, rgba(106, 202, 255, 0.2), rgba(106, 202, 255, 0.02));
+  transform-origin: top;
+  transform: translateY(-100%) skewX(-46deg);
+}
+
+.landing-hero-cube::after {
+  background: linear-gradient(90deg, rgba(8, 13, 24, 0.34), rgba(74, 126, 221, 0.16));
+  transform-origin: right;
+  transform: translateX(100%) skewY(-44deg);
+}
+
+.landing-hero-cube-large {
+  left: 4.5rem;
+  bottom: 1rem;
+  width: 7.25rem;
+  height: 7.25rem;
+}
+
+.landing-hero-cube-mid {
+  left: 10.5rem;
+  top: 5rem;
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.landing-hero-cube-small {
+  left: 1rem;
+  top: 3rem;
+  width: 3.2rem;
+  height: 3.2rem;
+}
+
+.landing-hero-node-ring {
+  right: 11%;
+  bottom: 13%;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  border: 1px solid rgba(158, 185, 214, 0.12);
+  transform: rotateX(72deg) rotateZ(-20deg);
+}
+
+.landing-hero-node-ring span {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin: -0.35rem;
+  border-radius: 50%;
+  background: rgba(158, 224, 255, 0.9);
+  box-shadow: 0 0 0 0.35rem rgba(158, 224, 255, 0.08), 0 0 18px rgba(88, 188, 255, 0.4);
+}
+
+.landing-hero-node-ring span:nth-child(1) {
+  left: 50%;
+  top: 0;
+}
+
+.landing-hero-node-ring span:nth-child(2) {
+  right: 0;
+  top: 50%;
+}
+
+.landing-hero-node-ring span:nth-child(3) {
+  left: 50%;
+  bottom: 0;
+}
+
+.landing-hero-node-ring span:nth-child(4) {
+  left: 0;
+  top: 50%;
+}
+
+.landing-theme-paper .landing-hero-orb-primary {
+  background: radial-gradient(circle, rgba(70, 122, 224, 0.22) 0%, rgba(70, 122, 224, 0.07) 44%, rgba(70, 122, 224, 0) 76%);
+}
+
+.landing-theme-paper .landing-hero-orb-secondary {
+  background: radial-gradient(circle, rgba(33, 169, 145, 0.14) 0%, rgba(33, 169, 145, 0.04) 46%, rgba(33, 169, 145, 0) 74%);
+}
+
+.landing-theme-paper .landing-hero-grid-plane,
+.landing-theme-paper .landing-hero-node-ring {
+  border-color: rgba(39, 49, 63, 0.12);
+}
+
+.landing-theme-paper .landing-hero-grid-plane {
+  background-image:
+    linear-gradient(rgba(39, 49, 63, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(39, 49, 63, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(159, 177, 198, 0.02));
+}
+
+.landing-theme-paper .landing-hero-grid-plane-secondary {
+  border-color: rgba(64, 109, 182, 0.18);
+  background-image:
+    linear-gradient(rgba(64, 109, 182, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(64, 109, 182, 0.12) 1px, transparent 1px);
+}
+
+.landing-theme-paper .landing-hero-cube {
+  border-color: rgba(63, 92, 133, 0.16);
+  background:
+    linear-gradient(145deg, rgba(120, 154, 224, 0.18), rgba(255, 255, 255, 0.18)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.08));
+}
+
+.landing-theme-paper .landing-hero-cube::before {
+  background: linear-gradient(180deg, rgba(142, 192, 255, 0.16), rgba(142, 192, 255, 0.03));
+}
+
+.landing-theme-paper .landing-hero-cube::after {
+  background: linear-gradient(90deg, rgba(202, 215, 234, 0.44), rgba(86, 127, 199, 0.14));
+}
+
+.landing-theme-paper .landing-hero-beam {
+  background: linear-gradient(180deg, rgba(73, 118, 212, 0), rgba(73, 118, 212, 0.38), rgba(73, 118, 212, 0));
+  box-shadow: 0 0 18px rgba(73, 118, 212, 0.24);
+}
+
+.landing-theme-paper .landing-hero-node-ring span {
+  background: rgba(64, 109, 182, 0.88);
+  box-shadow: 0 0 0 0.35rem rgba(64, 109, 182, 0.08), 0 0 18px rgba(64, 109, 182, 0.24);
 }
 
 .landing-hero-panel h1,
