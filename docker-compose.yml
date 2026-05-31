@@ -92,7 +92,7 @@ services:
       - namenode
 
   gateway:
-    image: golang:1.23
+    image: golang:1.24
     container_name: gitorc-gateway
     working_dir: /workspace/gitorcapi
     command: sh -c "go mod download && go run ./cmd/gitorc-gateway"
@@ -114,7 +114,7 @@ services:
         condition: service_started
 
   git-service:
-    image: golang:1.23
+    image: golang:1.24
     container_name: gitorc-git-service
     working_dir: /workspace/gitorcapi
     command: sh -c "go mod download && go run ./cmd/gitorc-git-service"
@@ -135,7 +135,7 @@ services:
         condition: service_healthy
 
   review-service:
-    image: golang:1.23
+    image: golang:1.24
     container_name: gitorc-review-service
     working_dir: /workspace/gitorcapi
     command: sh -c "go mod download && go run ./cmd/gitorc-review-service"
@@ -155,7 +155,7 @@ services:
         condition: service_started
 
   ci-service:
-    image: golang:1.23
+    image: golang:1.24
     container_name: gitorc-ci-service
     working_dir: /workspace/gitorcapi
     command: sh -c "go mod download && go run ./cmd/gitorc-ci-service"
@@ -178,7 +178,7 @@ services:
         condition: service_started
 
   cd-service:
-    image: golang:1.23
+    image: golang:1.24
     container_name: gitorc-cd-service
     working_dir: /workspace/gitorcapi
     command: sh -c "go mod download && go run ./cmd/gitorc-cd-service"
@@ -199,7 +199,7 @@ services:
         condition: service_started
 
   analytics-service:
-    image: golang:1.23
+    image: golang:1.24
     container_name: gitorc-analytics-service
     working_dir: /workspace/gitorcapi
     command: sh -c "go mod download && go run ./cmd/gitorc-analytics-service"
@@ -222,7 +222,7 @@ services:
     image: node:20-alpine
     container_name: gitorc-web
     working_dir: /workspace/gitorcweb
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5050"
+    command: sh -c "npm install && npm run build && npm run preview -- --host 0.0.0.0 --port 5050"
     volumes:
       - ./gitorcweb:/workspace/gitorcweb
       - gitorcweb_node_modules:/workspace/gitorcweb/node_modules
