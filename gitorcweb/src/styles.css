@@ -39,15 +39,462 @@ body {
 }
 
 .landing-shell {
+  --landing-bg: #0c1016;
+  --landing-surface: #11161e;
+  --landing-panel: #171d26;
+  --landing-panel-strong: #0f141c;
+  --landing-line: rgba(170, 180, 196, 0.2);
+  --landing-line-strong: rgba(216, 222, 233, 0.38);
+  --landing-text: #edf1f7;
+  --landing-muted: #b8c0cb;
+  --landing-soft: #8e98a7;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.landing-theme-paper {
+  --landing-bg: #eef2f6;
+  --landing-surface: #f7f9fb;
+  --landing-panel: #ffffff;
+  --landing-panel-strong: #e9edf2;
+  --landing-line: rgba(39, 49, 63, 0.14);
+  --landing-line-strong: rgba(39, 49, 63, 0.3);
+  --landing-text: #11161d;
+  --landing-muted: #405063;
+  --landing-soft: #5f6d7d;
 }
 
 .signin-shell {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.landing-header,
+.landing-sidebar,
+.landing-section,
+.landing-panel,
+.landing-flow-card,
+.landing-mini-card,
+.landing-evidence-card,
+.landing-sidebar-callout,
+.landing-command-panel {
+  background: var(--landing-surface);
+  color: var(--landing-text);
+  border: 1px solid var(--landing-line);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.landing-header {
+  position: sticky;
+  top: 1rem;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  backdrop-filter: blur(18px);
+}
+
+.landing-header-left,
+.landing-brand,
+.landing-header-nav,
+.landing-header-controls,
+.landing-search,
+.landing-signal-row,
+.landing-link-row,
+.landing-section-intro,
+.landing-section-title-row {
+  display: flex;
+  align-items: center;
+}
+
+.landing-header-left,
+.landing-header-controls,
+.landing-header-nav,
+.landing-link-row {
+  gap: 0.65rem;
+}
+
+.landing-brand {
+  gap: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.landing-brand-mark,
+.landing-icon-button,
+.landing-sidebar-icon,
+.landing-section-icon,
+.landing-search-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-brand-mark {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+}
+
+.landing-brand-mark svg,
+.landing-icon-button svg,
+.landing-sidebar-icon svg,
+.landing-section-icon svg,
+.landing-search-icon svg {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+.landing-brand-mark svg {
+  width: 26px;
+  height: 26px;
+}
+
+.landing-brand-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.landing-brand-copy strong,
+.landing-sidebar-copy strong,
+.landing-mini-card strong,
+.landing-command-panel h3,
+.landing-evidence-card strong,
+.landing-signal-row strong {
+  color: var(--landing-text);
+}
+
+.landing-brand-copy strong {
+  font-size: 0.92rem;
+  letter-spacing: 0.16em;
+}
+
+.landing-brand-copy span {
+  color: var(--landing-soft);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.landing-header-nav {
+  flex-wrap: wrap;
+}
+
+.landing-nav-link,
+.landing-control-button,
+.landing-icon-button,
+.landing-sidebar-link {
+  font: inherit;
+}
+
+.landing-nav-link,
+.landing-control-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+  color: var(--landing-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.landing-nav-link:hover,
+.landing-control-button:hover,
+.landing-sidebar-link:hover,
+.landing-icon-button:hover {
+  border-color: var(--landing-line-strong);
+  color: var(--landing-text);
+}
+
+.landing-search {
+  gap: 0.55rem;
+  padding: 0.3rem 0.35rem 0.3rem 0.7rem;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+}
+
+.landing-search input {
+  width: 220px;
+  padding: 0.45rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--landing-text);
+  font: inherit;
+}
+
+.landing-search input::placeholder {
+  color: var(--landing-soft);
+}
+
+.landing-icon-button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+  color: var(--landing-muted);
+  cursor: pointer;
+}
+
+.landing-workbench {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.landing-sidebar {
+  position: sticky;
+  top: 5.6rem;
+  padding: 1rem;
+}
+
+.landing-sidebar-group,
+.landing-main,
+.landing-sidebar-copy,
+.landing-signal-list,
+.landing-bullet-list,
+.landing-flow-grid,
+.landing-card-grid,
+.landing-subgrid {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-sidebar-group,
+.landing-main,
+.landing-signal-list,
+.landing-bullet-list,
+.landing-flow-grid,
+.landing-card-grid,
+.landing-subgrid {
+  gap: 0.85rem;
+}
+
+.landing-sidebar-kicker {
+  margin: 0 0 0.4rem;
+  color: var(--landing-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.68rem;
+}
+
+.landing-sidebar-link {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.8rem;
+  text-align: left;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+  color: var(--landing-muted);
+  cursor: pointer;
+}
+
+.landing-sidebar-link-active {
+  border-color: var(--landing-line-strong);
+  background: var(--landing-panel);
+  color: var(--landing-text);
+}
+
+.landing-sidebar-icon,
+.landing-section-icon,
+.landing-search-icon,
+.landing-icon-button,
+.landing-brand-mark {
+  flex: 0 0 auto;
+}
+
+.landing-sidebar-icon,
+.landing-section-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-bg);
+  color: var(--landing-muted);
+}
+
+.landing-sidebar-copy {
+  gap: 0.25rem;
+}
+
+.landing-sidebar-copy span,
+.landing-mini-card span,
+.landing-command-panel span,
+.landing-panel p,
+.landing-evidence-card li,
+.landing-flow-card p,
+.landing-signal-row span {
+  color: var(--landing-muted);
+}
+
+.landing-sidebar-callout,
+.landing-panel,
+.landing-evidence-card,
+.landing-command-panel,
+.landing-mini-card,
+.landing-flow-card,
+.landing-section {
+  padding: 1.1rem;
+}
+
+.landing-sidebar-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  background: var(--landing-panel-strong);
+}
+
+.landing-sidebar-callout code {
+  display: inline-block;
+  width: fit-content;
+  padding: 0.38rem 0.55rem;
+  background: var(--landing-bg);
+  border: 1px solid var(--landing-line);
+  color: var(--landing-text);
+}
+
+.landing-main {
+  min-width: 0;
+}
+
+.landing-section {
+  background: var(--landing-surface);
+}
+
+.landing-section-overview {
+  padding: 1.35rem;
+}
+
+.landing-section-intro {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.landing-section-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-panel-strong);
+  color: var(--landing-muted);
+  font-size: 0.82rem;
+}
+
+.landing-overview-grid,
+.landing-section-layout,
+.landing-subgrid,
+.landing-card-grid,
+.landing-flow-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.landing-overview-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.landing-section-layout,
+.landing-subgrid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+}
+
+.landing-card-grid,
+.landing-flow-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landing-panel,
+.landing-panel-strong {
+  background: var(--landing-panel);
+}
+
+.landing-panel-strong,
+.landing-evidence-card,
+.landing-command-panel,
+.landing-mini-card-strong,
+.landing-flow-card {
+  background: var(--landing-panel-strong);
+}
+
+.landing-signal-list {
+  gap: 0.2rem;
+  margin-bottom: 1rem;
+}
+
+.landing-signal-row {
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--landing-line);
+}
+
+.landing-signal-row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.landing-bullet-list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.landing-bullet-list li + li {
+  margin-top: 0.45rem;
+}
+
+.landing-bullet-list-compact li + li {
+  margin-top: 0.35rem;
+}
+
+.landing-section-head {
+  margin-bottom: 0.9rem;
+}
+
+.landing-section-title-row {
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.landing-evidence-card {
+  align-self: start;
+}
+
+.landing-mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.landing-command-panel .command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.landing-link-row {
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
 }
 
 .signin-grid {
@@ -815,10 +1262,29 @@ h1 {
     padding-top: 2rem;
   }
 
+  .landing-header,
+  .landing-header-left,
+  .landing-header-controls,
+  .landing-search,
+  .landing-section-intro,
+  .landing-link-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landing-brand {
+    justify-content: flex-start;
+  }
+
+  .landing-search input {
+    width: 100%;
+  }
+
   h1 {
     max-width: none;
   }
 
+  .landing-workbench,
   .hero-panel,
   .landing-grid,
   .landing-steps,
@@ -829,8 +1295,17 @@ h1 {
   .entity-grid,
   .entity-grid-wide,
   .gitlab-shell,
-  .gitlab-grid-two {
+  .gitlab-grid-two,
+  .landing-overview-grid,
+  .landing-section-layout,
+  .landing-subgrid,
+  .landing-card-grid,
+  .landing-flow-grid {
     grid-template-columns: 1fr;
+  }
+
+  .landing-sidebar {
+    position: static;
   }
 
   .gitlab-header {
@@ -849,6 +1324,19 @@ h1 {
 }
 
 @media (max-width: 960px) {
+  .landing-header,
+  .landing-header-left,
+  .landing-header-controls,
+  .landing-search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landing-search input {
+    width: 100%;
+  }
+
+  .landing-workbench,
   .hero-panel,
   .landing-grid,
   .landing-steps,
@@ -859,11 +1347,20 @@ h1 {
   .entity-grid,
   .entity-grid-wide,
   .gitlab-shell,
-  .gitlab-grid-two {
+  .gitlab-grid-two,
+  .landing-overview-grid,
+  .landing-section-layout,
+  .landing-subgrid,
+  .landing-card-grid,
+  .landing-flow-grid {
     grid-template-columns: 1fr;
   }
 
   .gitlab-sidebar {
+    position: static;
+  }
+
+  .landing-sidebar {
     position: static;
   }
 
