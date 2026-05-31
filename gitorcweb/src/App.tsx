@@ -195,12 +195,39 @@ const landingPages: LandingPage[] = [
   },
   {
     id: 'download-center',
-    label: 'Download center',
-    title: 'Multi-format downloads for Linux operators and platform teams',
-    intro: 'Install GITORC through Debian, RPM, tarball, or Go-based distribution paths. Tagged releases publish signed artifacts, checksums, and APT repository metadata so the platform can be installed like a standard Linux service.',
+    label: 'Installation quick start',
+    title: 'Installation quick start across packages, tarballs, containers, and Kubernetes',
+    intro: 'Install GITORC through Debian, RPM, tarball, Docker, or Kubernetes deployment paths. Choose the model that matches your environment, then complete identity, runner, and security setup after the base installation is online.',
     sections: [
       {
-        title: 'Download options',
+        title: 'Debian / Ubuntu (.deb)',
+        bullets: [
+          'Install dependencies: Git, OpenSSL, systemd, and a supported database. PostgreSQL is recommended.',
+          'Install package: sudo dpkg -i gitorc_<version>_amd64.deb',
+          'Repair dependencies if needed: sudo apt-get -f install',
+          'Enable and start service: sudo systemctl enable gitorc',
+          'Start service: sudo systemctl start gitorc',
+        ],
+      },
+      {
+        title: 'RHEL-compatible (.rpm)',
+        bullets: [
+          'Install dependencies: Git, OpenSSL, and PostgreSQL client/server packages.',
+          'Install package: sudo rpm -ivh gitorc-<version>-1.x86_64.rpm',
+          'Enable and start service: sudo systemctl enable gitorc',
+          'Start service: sudo systemctl start gitorc',
+        ],
+      },
+      {
+        title: 'Tarball (.tar.gz)',
+        bullets: [
+          'Extract archive: tar -xzf gitorc-<version>-linux-amd64.tar.gz -C /opt',
+          'Create a system user and service if you want the process managed by the host.',
+          'Run binary: /opt/gitorc/gitorc server --config /etc/gitorc/config.yaml',
+        ],
+      },
+      {
+        title: 'Download artifacts',
         links: [
           { label: 'Download .deb', href: 'https://github.com/AtonixCorp/gitorc/releases/latest/download/gitorc.deb', external: true, detail: 'Ubuntu and Debian package with systemd unit and packaged gateway runtime.' },
           { label: 'Download .rpm', href: 'https://github.com/AtonixCorp/gitorc/releases/latest/download/gitorc.rpm', external: true, detail: 'RHEL, CentOS, and Fedora package with service install path.' },
@@ -208,47 +235,65 @@ const landingPages: LandingPage[] = [
         ],
       },
       {
-        title: 'Install commands',
+        title: 'Docker',
         bullets: [
-          'sudo apt install gitorc',
-          'sudo apt install ./gitorc.deb',
-          'sudo rpm -i gitorc.rpm',
-          'tar -xvf gitorc.tar.gz',
-          'go install github.com/atonixcorp/gitorc@latest',
+          'Pull image: docker pull registry.example.com/gitorc/platform:<version>',
+          'Run container: docker run -d --name gitorc -p 8080:8080 -v /var/lib/gitorc:/var/lib/gitorc registry.example.com/gitorc/platform:<version>',
         ],
       },
       {
-        title: 'APT repository',
+        title: 'Kubernetes',
         bullets: [
-          'curl -fsSL https://atonixcorp.github.io/gitorc/apt/gitorc-archive-keyring.asc | sudo gpg --dearmor -o /usr/share/keyrings/gitorc-archive-keyring.gpg',
-          'echo "deb [signed-by=/usr/share/keyrings/gitorc-archive-keyring.gpg] https://atonixcorp.github.io/gitorc/apt stable main" | sudo tee /etc/apt/sources.list.d/gitorc.list',
-          'sudo apt update',
-          'sudo apt install gitorc',
+          'Deploy core components for web/API, workers or runners, database, cache, and object storage.',
+          'Use Helm chart or Kustomize with environment-specific values.',
+          'Set ingress and TLS values explicitly.',
+          'Choose storage classes for repositories, artifacts, and runtime state.',
+          'Define runner pools and external database and cache endpoints.',
         ],
       },
       {
-        title: 'Verification and service control',
+        title: 'System requirements',
         bullets: [
-          'sha256sum -c gitorc.deb.sha256',
-          'sha256sum -c gitorc.rpm.sha256',
-          'sha256sum -c gitorc.tar.gz.sha256',
-          'sudo systemctl enable gitorc',
-          'sudo systemctl start gitorc',
+          'CPU: 4 or more vCPUs recommended for production.',
+          'Memory: 8 GB minimum, 16 GB recommended.',
+          'Storage: reserve about 20 GB for the application and start repository and artifact storage at 200 GB or more depending on usage.',
+          'Network: maintain stable connectivity between GITORC, runners, database, cache, and object storage.',
+          'Use a load balancer for high-availability deployments when needed.',
+        ],
+      },
+      {
+        title: 'Post-installation steps',
+        bullets: [
+          'Access the web UI at http://<server>:8080 or your configured port.',
+          'Create the first admin account.',
+          'Configure LDAP, Active Directory, or internal users.',
+          'Register CI/CD runners running on VMs, containers, or bare metal.',
+          'Enable HTTPS with TLS termination at a reverse proxy or directly in GITORC.',
+          'Configure backups for the database and repository storage.',
+        ],
+      },
+      {
+        title: 'Recommended GITORC installation solutions',
+        bullets: [
+          'Single-node installation: use the .deb or .rpm package for an operator-managed host with systemd service control.',
+          'Air-gapped or custom-host installation: use the tarball when you need full control over paths, users, and service wrappers.',
+          'Container pilot deployment: use Docker for evaluation, demos, or small isolated environments.',
+          'Production platform deployment: use Kubernetes with Helm or Kustomize, external PostgreSQL, cache, object storage, ingress, TLS, and dedicated runner pools.',
         ],
       },
     ],
-    searchTerms: ['download', 'deb', 'rpm', 'tar.gz', 'apt', 'go install'],
+    searchTerms: ['installation', 'deb', 'rpm', 'tar.gz', 'docker', 'kubernetes', 'helm'],
   },
   {
     id: 'getting-started-overview',
     label: 'Getting started overview',
-    title: 'Getting started: from clone to first governed workflow',
-    intro: 'This is the fast path. Clone the repository, bootstrap the local stack, then run one workflow that proves repository state, pipeline state, and delivery state belong to one system.',
+    title: 'Getting started: install, bootstrap, and run the first workflow',
+    intro: 'Start with the installation model that fits your environment, then bootstrap the platform locally or on a managed host and run one workflow that proves repository, pipeline, and delivery state operate as one system.',
     sections: [
-      { title: 'Fast path', bullets: ['Clone the repository.', 'Start the local stack.', 'Verify the gateway and UI.', 'Run the first workflow.'] },
-      { title: 'Next', links: [{ label: 'Clone & run locally', targetId: 'clone-run-locally' }, { label: 'First pipeline in 10 minutes', targetId: 'first-pipeline-10-minutes' }] },
+      { title: 'Fast path', bullets: ['Choose the installation path: .deb, .rpm, tarball, Docker, or Kubernetes.', 'Install dependencies and bring the service online.', 'Verify the gateway and UI.', 'Connect identity, register runners, and run the first workflow.'] },
+      { title: 'Next', links: [{ label: 'Installation quick start', targetId: 'download-center' }, { label: 'Bootstrap locally', targetId: 'bootstrap-locally' }, { label: 'First pipeline in 10 minutes', targetId: 'first-pipeline-10-minutes' }] },
     ],
-    searchTerms: ['getting started', 'fast path'],
+    searchTerms: ['getting started', 'install', 'bootstrap', 'quick start'],
   },
   {
     id: 'clone-run-locally',
@@ -1118,14 +1163,14 @@ export function App() {
   const [publicPage, setPublicPage] = useState<PublicPage>(() => readPublicPage());
   const [authToken, setAuthToken] = useState<string | null>(() => readStoredAuthToken());
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
-  const [authChecking, setAuthChecking] = useState(() => readStoredAuthToken() !== null);
+  const [authChecking, setAuthChecking] = useState(() => !publicLandingMode && readStoredAuthToken() !== null);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [signupForm, setSignupForm] = useState({ username: '', email: '', password: '' });
   const [signupSubmitting, setSignupSubmitting] = useState(false);
   const [overview, setOverview] = useState<Overview | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !publicLandingMode);
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<FocusState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -1170,6 +1215,18 @@ export function App() {
 
   useEffect(() => {
     let active = true;
+
+    if (publicLandingMode) {
+      storeAuthToken(null);
+      setAuthToken(null);
+      setAuthSession(null);
+      setAuthChecking(false);
+      setIsLoading(false);
+      setError(null);
+      return () => {
+        active = false;
+      };
+    }
 
     if (!authToken) {
       setAuthSession(null);
