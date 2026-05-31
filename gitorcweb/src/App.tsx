@@ -55,6 +55,7 @@ type LandingPageId =
 
 type LandingIconName =
   | 'overview'
+  | 'dashboard'
   | 'workflow'
   | 'automation'
   | 'pipelines'
@@ -128,8 +129,8 @@ const landingPages: LandingPage[] = [
   {
     id: 'landing-overview',
     label: 'Developer platform overview',
-    title: 'A professional control plane for identity-driven software delivery',
-    intro: 'GITORC brings repository access, CI/CD automation, signed runtime decisions, and operator governance into one platform frame built for serious engineering teams.',
+    title: 'A CI/CD automation platform that deploys and manages cloud infrastructure',
+    intro: 'GITORC is not the cloud itself. It is the Git, CI/CD, and workflow platform that deploys and manages Proxmox, OpenStack, Kubernetes, Rancher, networking, observability, and application delivery from one governed automation surface.',
     sections: [
       {
         title: 'Start here',
@@ -143,8 +144,8 @@ const landingPages: LandingPage[] = [
       {
         title: 'Understand the platform',
         links: [
-          { label: 'Platform structure', targetId: 'platform-overview', detail: 'How CI/CD, workflows, devices, and security fit together.' },
-          { label: 'CI/CD & workflows', targetId: 'workflow-system', detail: 'Pipelines, delivery states, and runtime strategies.' },
+          { label: 'Platform structure', targetId: 'platform-overview', detail: 'How CI/CD, cloud deployment, clusters, and security fit together.' },
+          { label: 'CI/CD & workflows', targetId: 'workflow-system', detail: 'Pipelines, delivery states, and infrastructure automation strategies.' },
         ],
       },
       {
@@ -211,10 +212,10 @@ const landingPages: LandingPage[] = [
   {
     id: 'platform-overview',
     label: 'Platform overview',
-    title: 'Platform structure across CI/CD, workflows, infrastructure, and trust',
-    intro: 'The platform is designed to read clearly at a glance: repositories feed workflows, workflows drive CI/CD, infrastructure executes delivery, and identity-backed policy keeps the path governable.',
+    title: 'Platform structure across CI/CD, cloud deployment, infrastructure, and trust',
+    intro: 'Repositories feed workflows, workflows drive CI/CD, and pipelines deploy infrastructure layers such as Proxmox, OpenStack, Kubernetes, Rancher, networking, and observability while identity-backed policy keeps the path governable.',
     sections: [
-      { title: 'High-level map', bullets: ['CI/CD engine is the core operating runtime.', 'Pipelines and workflows translate repository state into delivery state.', 'Devices, nodes, and location-aware runtimes extend the orchestration surface.', 'Security binds identity, artifacts, and policy enforcement.'] },
+      { title: 'High-level map', bullets: ['CI/CD engine is the core operating runtime.', 'Pipelines and workflows translate repository state into infrastructure and application delivery state.', 'Cloud deployment automation targets Proxmox, OpenStack, OVN/OVS, FRR, Kubernetes, Rancher, Terraform, Ansible, Prometheus, and Grafana.', 'Security binds identity, artifacts, and policy enforcement.'] },
       { title: 'Next', links: [{ label: 'CI/CD engine', targetId: 'ci-cd-engine' }, { label: 'Pipelines & workflows', targetId: 'platform-pipelines-workflows' }, { label: 'Security model', targetId: 'security-model' }] },
     ],
     searchTerms: ['platform structure', 'overview'],
@@ -222,12 +223,13 @@ const landingPages: LandingPage[] = [
   {
     id: 'ci-cd-engine',
     label: 'CI/CD engine',
-    title: 'CI/CD engine for private infrastructure and governed delivery',
-    intro: 'The CI/CD engine is the core runtime connecting repositories, workflows, and delivery into governed, auditable operations across private and high-compute environments.',
+    title: 'CI/CD engine for governed cloud deployment and delivery',
+    intro: 'The CI/CD engine connects repositories, workflows, and delivery into governed operations that can deploy infrastructure stacks, manage clusters, run GPU workloads, and ship applications across private environments.',
     sections: [
       { title: 'Role in the platform', bullets: ['CI/CD is an operating function, not a sidecar tool.', 'It is tied to repository state, signed artifacts, and runtime enforcement.'] },
-      { title: 'Workflows as pipelines', bullets: ['Workflows operate as pipelines with scope control.', 'Delivery is controlled from repository to build to deploy to runtime.'] },
-      { title: 'Private infrastructure & HPC', bullets: ['Supports private cloud footprints and high-compute environments.', 'Integrates with devices, nodes, and location-aware runtimes.'] },
+      { title: 'Workflows as pipelines', bullets: ['Workflows operate as pipelines with scope control.', 'Delivery is controlled from repository to build to infrastructure deploy to runtime.'] },
+      { title: 'Cloud deployment lanes', bullets: ['Pipelines must deploy OpenStack, Kubernetes clusters, Rancher registration, OVN/OVS, FRR routing, monitoring stacks, and application releases.', 'Terraform and Ansible execution belong inside the automation surface rather than outside it.'] },
+      { title: 'Private infrastructure & HPC', bullets: ['Supports bare-metal, Proxmox VMs, OpenStack VMs, Kubernetes pods, and GPU-capable execution surfaces.', 'Integrates with nodes and cluster-backed runtimes without becoming a cloud dashboard itself.'] },
       { title: 'Security model', bullets: ['Security operates as signed artifacts, RBAC context, and runtime policy.', 'The engine enforces who can change what and where it runs.'] },
       { title: 'Where to go next', links: [{ label: 'Pipelines & workflows', targetId: 'platform-pipelines-workflows' }, { label: 'Device & node integration', targetId: 'device-node-integration' }, { label: 'Security model', targetId: 'security-model' }] },
     ],
@@ -236,10 +238,11 @@ const landingPages: LandingPage[] = [
   {
     id: 'platform-pipelines-workflows',
     label: 'Pipelines & workflows',
-    title: 'Pipelines and workflows as governed delivery lanes',
-    intro: 'Pipelines and workflows turn repository events into build, promotion, deployment, and runtime outcomes with explicit stage clarity and accountability.',
+    title: 'Pipelines and workflows as governed cloud deployment lanes',
+    intro: 'Pipelines and workflows turn repository events into build, promotion, infrastructure deployment, cluster registration, monitoring rollout, and runtime outcomes with explicit stage clarity and accountability.',
     sections: [
-      { title: 'Why they matter', bullets: ['Pipelines encode stage state and promotion readiness.', 'Workflow boundaries make rollout and rollback explicit.', 'Artifact traceability stays close to delivery state.'] },
+      { title: 'Why they matter', bullets: ['Pipelines encode stage state and promotion readiness.', 'Workflow boundaries make rollout, upgrade, and rollback explicit.', 'Artifact traceability stays close to infrastructure and application delivery state.'] },
+      { title: 'Cloud automation scope', bullets: ['Deploy OpenStack.', 'Deploy Kubernetes clusters.', 'Register clusters in Rancher.', 'Configure OVN/OVS and FRR.', 'Deploy monitoring stacks and application releases.', 'Manage upgrades through repeatable automation.'] },
       { title: 'Related pages', links: [{ label: 'How workflows enable one cohesive system', targetId: 'workflow-system' }, { label: 'Workflow states & delivery', targetId: 'workflow-states-delivery' }, { label: 'Runtime strategies', targetId: 'runtime-strategies' }] },
     ],
     searchTerms: ['pipelines', 'workflows'],
@@ -266,9 +269,9 @@ const landingPages: LandingPage[] = [
   {
     id: 'private-cloud-hpc',
     label: 'Private cloud & HPC',
-    title: 'Private cloud and HPC readiness for high-control environments',
-    intro: 'The platform fits private cloud, internal cluster, and high-compute environments where governance and runtime visibility matter from the first deployment.',
-    sections: [{ title: 'Infrastructure fit', bullets: ['Supports isolated deployment boundaries and self-hosted control surfaces.', 'Maps naturally to high-compute and cluster-backed delivery environments.', 'Treats the UI and services as infrastructure software rather than brochureware.'] }],
+    title: 'Bare-metal, VM, pod, and GPU readiness for high-control environments',
+    intro: 'The platform must run on bare-metal servers, Proxmox VMs, OpenStack VMs, Kubernetes pods, and GPU-capable environments while keeping governance and runtime visibility intact.',
+    sections: [{ title: 'Infrastructure fit', bullets: ['Supports isolated deployment boundaries and self-hosted control surfaces.', 'Maps naturally to bare-metal, VM, pod, and GPU-backed delivery environments.', 'Treats the UI and services as infrastructure software rather than a cloud dashboard replacement.'] }],
     searchTerms: ['private cloud', 'hpc'],
   },
   {
@@ -354,9 +357,9 @@ const landingPages: LandingPage[] = [
   },
   {
     id: 'docs-inventory',
-    label: 'Docs inventory',
-    title: 'Developer documentation built for fast technical evaluation',
-    intro: 'Documentation should help developers and stakeholders understand the platform quickly, with clear paths through architecture, quickstarts, operations, and APIs.',
+    label: 'Developer documentation',
+    title: 'Developer documentation for platform, pipelines, cloud deployment, and APIs',
+    intro: 'Documentation should help developers and stakeholders understand the platform quickly, with clear paths through architecture, quickstarts, operations, cloud deployment workflows, and APIs.',
     sections: [
       { title: 'Documentation surfaces', links: [{ label: 'API reference', targetId: 'api-reference' }, { label: 'Architecture docs', targetId: 'architecture-docs' }, { label: 'Local development guide', targetId: 'local-development-guide' }] },
       { title: 'Inventory', bullets: ['README and architecture docs describe the platform structure and operating model.', 'API documentation and contracts explain integration surfaces.', 'Local development docs define bootstrap, build, and endpoint behavior.'], links: [{ label: 'First pipeline in 10 minutes', targetId: 'first-pipeline-10-minutes', detail: 'Quickstart guides live under developer documentation.' }] },
@@ -392,7 +395,7 @@ const landingPages: LandingPage[] = [
   },
   {
     id: 'developer-community',
-    label: 'Developer community',
+    label: 'Community & support',
     title: 'Developer community for adoption, discussion, and contributor momentum',
     intro: 'Community channels are part of the platform experience: they support implementation questions, contributor onboarding, and long-term confidence around adoption.',
     sections: [
@@ -442,8 +445,8 @@ const landingSidebarGroups: LandingSidebarGroup[] = [
     items: [
       { id: 'repository-role', label: 'Repository role', icon: 'repository' },
       { id: 'bootstrap-locally', label: 'Bootstrap locally', icon: 'automation' },
-      { id: 'docs-inventory', label: 'Docs inventory', icon: 'docs' },
-      { id: 'developer-community', label: 'Developer community', icon: 'community' },
+      { id: 'docs-inventory', label: 'Developer documentation', icon: 'docs' },
+      { id: 'developer-community', label: 'Community & support', icon: 'community' },
     ],
   },
   {
@@ -604,6 +607,13 @@ function LandingIcon({ icon }: { icon: LandingIconName }) {
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="8" r="3.3" fill="none" stroke="currentColor" strokeWidth="1.7" />
           <path d="M5.5 19a6.5 6.5 0 0 1 13 0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case 'dashboard':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <path d="M8 9h8M8 12.5h4M8 16h6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
         </svg>
       );
     case 'overview':
@@ -779,7 +789,7 @@ export function App() {
   const [authChecking, setAuthChecking] = useState(() => readStoredAuthToken() !== null);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [loginForm, setLoginForm] = useState({ username: 'platform-admin', password: 'gitorc-demo' });
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [overview, setOverview] = useState<Overview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1113,39 +1123,66 @@ export function App() {
   const dashboardShortcutCards = useMemo(
     () => [
       {
-        title: 'Repository access',
-        description: 'Open connected source inventory, clone paths, and review entry points.',
-        icon: 'repository' as LandingIconName,
-        actionLabel: 'Open repositories',
-        onClick: () => navigateTo('repositories', selectedRepository?.id),
-      },
-      {
-        title: 'First pipeline',
-        description: 'Start the 10-minute quickstart and move directly into governed CI/CD flow.',
-        icon: 'pipelines' as LandingIconName,
-        actionLabel: 'Run pipeline',
-        onClick: () => navigateTo('pipelines', selectedRepository?.id),
-      },
-      {
-        title: 'Control panel',
-        description: 'Inspect deployments, live runtime, trust state, and control-plane health.',
-        icon: 'control-panel' as LandingIconName,
-        actionLabel: 'Open overview',
+        title: 'Open Control Panel',
+        description: 'Open the main operator surface for projects, delivery state, runtime trust, and infrastructure automation.',
+        icon: 'dashboard' as LandingIconName,
+        actionLabel: 'Open control panel',
         onClick: () => navigateTo('overview', selectedRepository?.id),
       },
       {
-        title: 'Community channels',
-        description: 'Route operators and contributors to support, onboarding, and discussion threads.',
-        icon: 'channel' as LandingIconName,
-        actionLabel: 'Open community page',
-        onClick: () => window.open('https://github.com/AtonixCorp/gitorc', '_blank', 'noreferrer'),
+        title: 'Open Repository',
+        description: 'Inspect connected repositories, clone paths, review flow, and source inventory.',
+        icon: 'repository' as LandingIconName,
+        actionLabel: 'Open repository',
+        onClick: () => navigateTo('repositories', selectedRepository?.id),
+      },
+      {
+        title: 'Pipelines',
+        description: 'Run CI, inspect stage health, promote artifacts, and manage governed delivery flow.',
+        icon: 'pipelines' as LandingIconName,
+        actionLabel: 'Open pipelines',
+        onClick: () => navigateTo('pipelines', selectedRepository?.id),
+      },
+      {
+        title: 'Clusters (Rancher)',
+        description: 'Surface cluster operations and Rancher-managed deployment lanes from the automation workspace.',
+        icon: 'control-panel' as LandingIconName,
+        actionLabel: 'Open clusters',
+        onClick: () => {
+          navigateTo('deployments', selectedRepository?.id);
+          setToast('Cluster and Rancher integration surfaces map through deployment operations.');
+        },
+      },
+      {
+        title: 'Monitoring',
+        description: 'Open observability-aligned deployment and runtime views for Prometheus and Grafana-operated environments.',
+        icon: 'overview' as LandingIconName,
+        actionLabel: 'Open monitoring',
+        onClick: () => {
+          navigateTo('containers', selectedRepository?.id);
+          setToast('Monitoring surfaces are represented through runtime and event visibility.');
+        },
+      },
+      {
+        title: 'Cloud Deployment Tools',
+        description: 'Track automation lanes that deploy Proxmox, OpenStack, Kubernetes, Rancher, networking, and observability stacks.',
+        icon: 'automation' as LandingIconName,
+        actionLabel: 'Open deployment docs',
+        onClick: () => window.open('https://github.com/AtonixCorp/gitorc/tree/main/infra', '_blank', 'noreferrer'),
       },
       {
         title: 'Docs & API reference',
-        description: 'Keep architecture, quickstarts, and contract references one click away.',
+        description: 'Keep architecture, quickstarts, platform deployment docs, and API contracts one click away.',
         icon: 'docs' as LandingIconName,
         actionLabel: 'Open docs',
         onClick: () => window.open('https://github.com/AtonixCorp/gitorc/tree/main/docs', '_blank', 'noreferrer'),
+      },
+      {
+        title: 'Community & Support',
+        description: 'Route operators and contributors to community channels, onboarding guidance, and support surfaces.',
+        icon: 'community' as LandingIconName,
+        actionLabel: 'Open community',
+        onClick: () => window.open('https://github.com/AtonixCorp/gitorc', '_blank', 'noreferrer'),
       },
     ],
     [selectedRepository?.id],
@@ -1269,7 +1306,7 @@ export function App() {
           summary: projectDraft.summary,
           defaultBranch: projectDraft.defaultBranch,
         };
-        result = await createRepository(payload);
+        result = await createRepository(payload, authSession?.token ?? authToken);
       } else {
         const payload: ImportRepositoryInput = {
           name: projectDraft.name,
@@ -1277,7 +1314,7 @@ export function App() {
           defaultBranch: projectDraft.defaultBranch,
           sourceUrl: projectDraft.sourceUrl,
         };
-        result = await importRepository(payload);
+        result = await importRepository(payload, authSession?.token ?? authToken);
       }
 
       await loadOverview();
@@ -2251,12 +2288,11 @@ export function App() {
           <article className="landing-hero-panel">
             <p className="eyebrow">Identity-driven Git + CI/CD automation</p>
             <h1>GITORC</h1>
-            <p className="landing-hero-tagline">Identity-Driven CI/CD Automation Platform.</p>
-            <p className="lede">A standard, professional developer platform for repositories, pipelines, RBAC-governed access, and control-plane operations.</p>
+            <p className="landing-hero-tagline">CI/CD Automation That Deploys and Manages Our Cloud.</p>
+            <p className="lede">A clean operator platform for repositories, pipelines, RBAC-governed access, and cloud deployment workflows across Proxmox, OpenStack, Kubernetes, Rancher, networking, and observability.</p>
             <div className="landing-hero-actions">
               <a className="button button-ghost" href="https://github.com/AtonixCorp/gitorc" rel="noreferrer" target="_blank">Open repository</a>
-              <button className="button button-primary" onClick={() => navigatePublic('platform', 'platform-overview')} type="button">Open control panel</button>
-              <button className="button button-ghost" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
+              <button className="button button-primary" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
             </div>
           </article>
         </section>
@@ -2400,8 +2436,8 @@ export function App() {
             <h1 className="signin-title">Login before dashboard access.</h1>
           </div>
           <p className="lede">
-            GITORC exposes the dashboard only through authenticated identity and RBAC policy. Repository actions, CI/CD execution,
-            control-panel operations, and runtime oversight belong behind that access boundary.
+            GITORC exposes the dashboard only through authenticated directory identity and RBAC policy. Repository actions, CI/CD execution,
+            control-plane operations, and runtime oversight remain behind that access boundary.
           </p>
           <div className="signin-badges">
             <span className="landing-section-chip">Identity required</span>
@@ -2456,19 +2492,19 @@ export function App() {
             <div className="trace-grid">
               <article className="trace-card">
                 <h3>Projects and repositories</h3>
-                <p>Create projects, inspect connected providers, and start clone or review actions.</p>
+                <p>Create projects, inspect connected providers, and move from repository intake into governed implementation work.</p>
               </article>
               <article className="trace-card">
                 <h3>Pipelines and deployments</h3>
-                <p>Run CI, inspect stage health, promote artifacts, and manage rollbacks.</p>
+                <p>Run CI, inspect stage health, promote signed artifacts, and manage controlled rollbacks.</p>
               </article>
               <article className="trace-card">
-                <h3>Control panel</h3>
-                <p>Open infra management, runtime visibility, signed events, and trust-state controls.</p>
+                <h3>Control plane</h3>
+                <p>Open infrastructure management, runtime visibility, signed events, and trust-state controls.</p>
               </article>
               <article className="trace-card">
                 <h3>Community, docs, and APIs</h3>
-                <p>Keep community channels, developer documentation, and API reference inside the same platform frame.</p>
+                <p>Keep community channels, developer documentation, and API reference inside the same governed platform frame.</p>
               </article>
             </div>
           </article>
@@ -2477,24 +2513,24 @@ export function App() {
             <div className="section-heading compact-heading">
               <div>
                 <p className="section-kicker">Identity directive</p>
-                <h2>Approved operator profiles</h2>
+                <h2>Directory-backed access model</h2>
               </div>
             </div>
             <div className="landing-steps signin-steps">
               <article className="trace-card">
                 <span className="step-index">1</span>
-                <h3>Platform admin</h3>
-                <p><strong>platform-admin</strong> with password <strong>gitorc-demo</strong> receives control-panel administration rights.</p>
+                <h3>Directory authentication</h3>
+                <p>Operators sign in with their directory-backed username and password through the gateway LDAP verification flow.</p>
               </article>
               <article className="trace-card">
                 <span className="step-index">2</span>
-                <h3>Release operator</h3>
-                <p><strong>release-operator</strong> with password <strong>gitorc-demo</strong> receives release-lane permissions for CI/CD and deployment actions.</p>
+                <h3>Role-based access</h3>
+                <p>Repository, CI/CD, deployment, and control-plane privileges are derived from directory group membership and RBAC policy.</p>
               </article>
               <article className="trace-card">
                 <span className="step-index">3</span>
-                <h3>RBAC session</h3>
-                <p>Sessions are issued by the gateway and required for dashboard data, so repository, pipeline, and control-panel access stay behind the login gate.</p>
+                <h3>Session enforcement</h3>
+                <p>Sessions are issued by the gateway and required for dashboard data, so repository, pipeline, and control-plane access stay behind the login gate.</p>
               </article>
             </div>
           </article>
