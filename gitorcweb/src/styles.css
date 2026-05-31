@@ -661,7 +661,7 @@ body {
 
 .auth-card {
   width: min(100%, 460px);
-  padding: 1.5rem;
+  padding: 1.5rem 1.45rem;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(180deg, rgba(18, 22, 29, 0.96) 0%, rgba(10, 13, 18, 0.98) 100%);
@@ -686,9 +686,10 @@ body {
 }
 
 .auth-card-header {
-  align-items: flex-start;
-  gap: 0.95rem;
-  margin-bottom: 1.2rem;
+  align-items: center;
+  text-align: center;
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
 }
 
 .auth-card-kicker {
@@ -700,6 +701,7 @@ body {
 }
 
 .auth-card-header h1 {
+  text-align: center;
   margin-bottom: 0.35rem;
   font-size: clamp(1.6rem, 4vw, 2rem);
 }
@@ -709,6 +711,7 @@ body {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.95rem;
+  text-align: center;
 }
 
 .auth-card-mark {
@@ -727,21 +730,22 @@ body {
 
 .auth-provider-list {
   display: flex;
+  justify-content: center;
   gap: 0.75rem;
+  margin-bottom: 0.15rem;
 }
 
 .auth-provider-button {
-  width: 100%;
-  justify-content: flex-start;
-  gap: 0.75rem;
-  min-height: 50px;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
+  width: 54px;
+  height: 54px;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.025);
   color: var(--text-strong);
   font: inherit;
-  font-weight: 500;
   cursor: pointer;
   transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
 }
@@ -754,19 +758,19 @@ body {
 
 .auth-provider-icon {
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
 }
 
 .auth-provider-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .auth-divider {
   gap: 0.8rem;
-  margin: 1.1rem 0 0.6rem;
+  margin: 1rem 0 0.6rem;
   color: var(--text-soft);
   font-size: 0.8rem;
 }

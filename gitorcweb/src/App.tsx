@@ -2436,9 +2436,6 @@ export function App() {
                 </div>
                 <div className="landing-page-actions">
                   <button className="button button-primary" onClick={() => navigatePublic('signin')} type="button">Login to dashboard</button>
-                  <a className="button button-ghost" href="https://github.com/AtonixCorp/gitorc" rel="noreferrer" target="_blank">Open repository</a>
-                  <button className="button button-ghost" onClick={() => navigatePublic('platform', 'changelog-releases')} type="button">View changelog</button>
-                  <button className="button button-ghost" onClick={() => navigatePublic('platform', 'discord-channels')} type="button">Join community</button>
                 </div>
               </div>
               <div className="landing-page-sections">
@@ -2483,13 +2480,14 @@ export function App() {
     const providerLabel = provider === 'github' ? 'GitHub' : provider === 'gitlab' ? 'GitLab' : 'Google';
     return (
       <button
+        aria-label={mode === 'login' ? `Login with ${providerLabel}` : `Sign up with ${providerLabel}`}
         key={`${mode}-${provider}`}
         className={`auth-provider-button auth-provider-${provider}`}
         onClick={() => handleProviderAuth(provider, mode)}
+        title={mode === 'login' ? `Login with ${providerLabel}` : `Sign up with ${providerLabel}`}
         type="button"
       >
         <span className="auth-provider-icon"><LandingIcon icon={provider} /></span>
-        <span>{mode === 'login' ? `Login with ${providerLabel}` : `Sign up with ${providerLabel}`}</span>
       </button>
     );
   };
