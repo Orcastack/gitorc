@@ -17,32 +17,57 @@
   --surface-highlight: rgba(255, 255, 255, 0.14);
 }
 
-/* Override earlier mobile stacking: keep header horizontal and show single hamburger */
+/* Desktop-small: keep hamburger visible, hide full nav under 768px */
 @media (max-width: 768px) {
+  .landing-header-nav { display: none !important; }
+  .landing-hamburger { display: inline-flex !important; }
+  .landing-hamburger svg { width: 18px; height: 18px; }
+  .landing-header-controls { display: flex !important; align-items: center !important; gap: 0.4rem !important; }
+  .landing-brand-mark { width: 34px !important; height: 34px !important; }
+  .landing-header { overflow: visible; }
+}
+
+/* Small screens: stack header vertically with icons row above brand text */
+@media (max-width: 600px) {
   .landing-header {
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    flex-wrap: nowrap !important;
-  }
-
-  .landing-header-nav {
-    display: none !important;
-  }
-
-  .landing-hamburger {
-    display: inline-flex !important;
-    order: 2;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    padding: 0.6rem 0.6rem 0.8rem;
+    overflow: visible;
   }
 
   .landing-header-controls {
+    width: 100%;
     display: flex !important;
-    align-items: center !important;
-    gap: 0.4rem !important;
+    justify-content: flex-end;
+    order: 1;
+    padding-bottom: 0.15rem;
   }
 
-  .landing-brand-copy { display: none !important; }
-  .landing-brand-mark { width: 34px !important; height: 34px !important; }
+  .landing-hamburger { order: 1; }
+
+  .landing-brand {
+    order: 2;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding-top: 0.15rem;
+  }
+
+  .landing-brand-copy {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    overflow: visible;
+  }
+
+  .landing-brand-copy strong { font-size: 0.92rem; line-height: 1; }
+  .landing-brand-copy span { font-size: 0.66rem; opacity: 0.95; }
+
+  .landing-nav-link { width: 100%; justify-content: flex-start; }
 }
 
 * {
