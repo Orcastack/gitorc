@@ -70,6 +70,36 @@
   .landing-nav-link { width: 100%; justify-content: flex-start; }
 }
 
+/* Ensure header icons and nav icons align horizontally and don't wrap */
+.landing-header-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.landing-header-controls > a,
+.landing-header-controls > button {
+  flex: 0 0 auto;
+}
+
+.landing-header-nav {
+  display: flex;
+  flex-direction: row;
+  gap: 0.45rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Keep social icon only in header (do not render social actions inside mobile nav). */
+.landing-mobile-nav .landing-icon-button[aria-label*="Open AtonixCorp"],
+.landing-mobile-links .landing-icon-button[aria-label*="Open AtonixCorp"] {
+  display: none;
+}
+
 * {
   box-sizing: border-box;
 }
