@@ -3374,3 +3374,342 @@ hr {
 }
 
 /* PREMIUM POLISH LAYER · end */
+
+/* =============================================================
+   HERO FIX  ·  center text + static background (no parallax)
+   ============================================================= */
+
+/* Center the hero column and its content */
+.landing-hero-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.landing-hero-panel {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.25rem;
+}
+
+.landing-hero-panel .eyebrow,
+.landing-hero-panel h1,
+.landing-hero-panel .landing-hero-tagline,
+.landing-hero-panel .lede {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+/* Remove the narrow clamps that were shrinking the headline/tagline */
+.landing-hero-panel h1,
+.landing-page-hero h1 {
+  max-width: none;
+}
+.landing-hero-panel h1 {
+  max-width: 18ch;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.92;
+}
+.landing-hero-tagline {
+  max-width: 38ch;
+}
+.landing-hero-panel .lede {
+  max-width: 62ch;
+}
+
+.landing-hero-actions {
+  justify-content: center;
+}
+
+/* Kill the offset/blur background panel so the headline sits on a clean canvas */
+.landing-hero-panel::before {
+  display: none;
+}
+
+/* Make the ambient background fully static: no parallax, no float, no drift */
+.landing-hero-background {
+  /* Freeze the pointer-tracked gradient to dead center */
+  --landing-hero-pointer-x: 50% !important;
+  --landing-hero-pointer-y: 50% !important;
+  pointer-events: none;
+}
+
+.landing-hero-orb,
+.landing-hero-orb-primary,
+.landing-hero-orb-secondary,
+.landing-hero-grid-plane,
+.landing-hero-grid-plane-secondary,
+.landing-hero-beam,
+.landing-hero-beam-left,
+.landing-hero-beam-right,
+.landing-hero-cube-cluster,
+.landing-hero-cube,
+.landing-hero-node-ring {
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Small screens: keep centered, tighten spacing */
+@media (max-width: 600px) {
+  .landing-hero-panel { padding: 2rem 1rem; }
+  .landing-hero-panel h1 { font-size: clamp(2.6rem, 12vw, 4rem); }
+  .landing-hero-tagline { max-width: 28ch; }
+}
+
+/* =============================================================
+   UNIVERSAL RESPONSIVENESS LAYER
+   Phones, tablets, laptops, desktops, ultra-wide.
+   ============================================================= */
+
+/* Global guardrails: no horizontal overflow, fluid media */
+html, body { overflow-x: hidden; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+pre, code { max-width: 100%; overflow-x: auto; word-break: break-word; }
+table { display: block; max-width: 100%; overflow-x: auto; }
+
+/* Fluid container */
+.shell {
+  width: min(1380px, calc(100% - 1.5rem));
+  padding: 1.25rem 0 3rem;
+}
+
+/* Make every text-bearing block wrap nicely */
+h1, h2, h3, h4, p, li, a, span, strong, em {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* === Ultra-wide screens (>= 1600px): give the shell more room === */
+@media (min-width: 1600px) {
+  .shell { width: min(1500px, calc(100% - 2rem)); }
+  .landing-workbench { grid-template-columns: 300px minmax(0, 1fr); gap: 1rem; }
+}
+
+/* === Laptops (1280–1599px) === */
+@media (max-width: 1440px) {
+  .landing-workbench { grid-template-columns: 260px minmax(0, 1fr); }
+}
+
+/* === Tablets landscape / small laptop (<= 1180px): collapse 3-col grids === */
+@media (max-width: 1180px) {
+  .landing-card-grid,
+  .landing-flow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .landing-overview-grid,
+  .landing-section-layout,
+  .landing-subgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .landing-workbench {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  .landing-sidebar { padding: 0.7rem 0.4rem; }
+}
+
+/* === Tablets portrait (<= 960px): single-column workbench, mobile nav === */
+@media (max-width: 960px) {
+  .shell { width: calc(100% - 1rem); padding: 0.75rem 0 2.5rem; }
+
+  .landing-workbench {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .landing-sidebar {
+    position: static;
+    top: auto;
+    border-width: 1px;
+  }
+  .landing-card-grid,
+  .landing-flow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .signin-grid {
+    grid-template-columns: 1fr;
+  }
+  .landing-page-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .landing-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .landing-hero-shell {
+    min-height: auto;
+    padding: 2.5rem 0 3rem;
+  }
+  .landing-hero-panel { padding: 1.5rem 1rem 2rem; }
+  .hero-panel { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+/* === Phones (<= 720px) === */
+@media (max-width: 720px) {
+  :root { font-size: 15px; }
+  .shell { padding: 0.5rem 0 2rem; }
+
+  .landing-card-grid,
+  .landing-flow-grid,
+  .landing-link-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-section,
+  .landing-page,
+  .landing-page-section,
+  .landing-panel,
+  .landing-mini-card,
+  .landing-flow-card,
+  .landing-evidence-card,
+  .landing-command-panel {
+    padding: 0.85rem;
+    border-radius: 14px;
+  }
+
+  /* Buttons become tap-friendly */
+  .landing-nav-link,
+  .landing-control-button,
+  .landing-icon-button,
+  .auth-provider-button,
+  button,
+  .button,
+  .button-ghost {
+    min-height: 44px;
+  }
+
+  /* Make horizontal nav scroll instead of clipping */
+  .landing-header-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .landing-header-nav::-webkit-scrollbar { display: none; }
+
+  /* Hero typography fits comfortably */
+  .landing-hero-panel { padding: 1.25rem 0.75rem 1.75rem; }
+  .landing-hero-panel h1 {
+    font-size: clamp(2.2rem, 11vw, 3.4rem);
+    line-height: 1;
+    max-width: 16ch;
+  }
+  .landing-hero-tagline {
+    font-size: clamp(1rem, 5vw, 1.25rem);
+    max-width: 26ch;
+  }
+  .landing-hero-panel .lede { font-size: 0.95rem; line-height: 1.6; }
+  .landing-hero-actions { gap: 0.5rem; width: 100%; }
+  .landing-hero-actions .button,
+  .landing-hero-actions .button-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sidebar inside collapsed workbench feels lighter */
+  .landing-sidebar-link {
+    grid-template-columns: 22px minmax(0, 1fr);
+    padding: 0.55rem 0.5rem;
+  }
+
+  /* Auth */
+  .auth-shell { padding: 1.25rem 0.75rem; min-height: calc(100vh - 5rem); }
+  .auth-card { padding: 1.25rem 1rem; border-radius: 18px; }
+  .auth-card-header h1 { font-size: clamp(1.4rem, 6vw, 1.75rem); }
+  .auth-provider-list { gap: 0.55rem; }
+  .auth-provider-button { width: 48px; height: 48px; min-height: 48px; }
+
+  /* Sign-in form/grid */
+  .signin-panel { padding: 1.1rem; }
+  .signin-form { gap: 0.7rem; }
+}
+
+/* === Tiny phones (<= 380px) === */
+@media (max-width: 380px) {
+  :root { font-size: 14px; }
+  .shell { width: calc(100% - 0.75rem); }
+  .landing-hero-panel h1 { font-size: clamp(2rem, 13vw, 3rem); }
+  .landing-brand-copy strong { font-size: 0.78rem; letter-spacing: 0.14em; }
+  .landing-brand-copy span { font-size: 0.6rem; }
+  .auth-card { border-radius: 14px; }
+  .auth-provider-button { width: 44px; height: 44px; min-height: 44px; }
+}
+
+/* === Landscape phones (short height): tighten vertical spacing === */
+@media (max-height: 520px) and (orientation: landscape) {
+  .landing-hero-shell { min-height: auto; padding: 1rem 0 1.5rem; }
+  .landing-hero-panel { padding: 0.5rem 0.75rem 1rem; }
+  .landing-hero-panel h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1; }
+  .landing-hero-tagline { font-size: 1rem; }
+  .landing-hero-actions { margin-top: 0.75rem; }
+  .auth-shell { min-height: auto; padding: 0.75rem; }
+}
+
+/* === Touch-only devices: disable hover lifts that feel sticky === */
+@media (hover: none) and (pointer: coarse) {
+  .landing-flow-card:hover,
+  .landing-mini-card:hover,
+  .landing-evidence-card:hover,
+  .landing-link-card:hover,
+  .landing-hero-actions .button:hover,
+  .landing-hero-actions .button-ghost:hover,
+  .auth-submit-button:hover,
+  .auth-provider-button:hover,
+  .landing-icon-button:hover {
+    transform: none;
+  }
+}
+
+/* === High DPI: keep crisp 1px borders === */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .landing-section,
+  .landing-page,
+  .landing-page-section,
+  .landing-panel,
+  .landing-flow-card,
+  .landing-mini-card,
+  .landing-evidence-card,
+  .landing-sidebar,
+  .landing-header {
+    border-width: 0.5px;
+  }
+}
+
+/* === Print === */
+@media print {
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .landing-header,
+  .landing-sidebar,
+  .landing-hero-background,
+  .landing-page-actions,
+  .landing-hero-actions { display: none !important; }
+  .landing-workbench { grid-template-columns: 1fr !important; }
+  .landing-section,
+  .landing-page,
+  .landing-page-section {
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Safe-area insets for notched phones */
+@supports (padding: max(0px)) {
+  .landing-header {
+    padding-left: max(0.7rem, env(safe-area-inset-left));
+    padding-right: max(0.7rem, env(safe-area-inset-right));
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
