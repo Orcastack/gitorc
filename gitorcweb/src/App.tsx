@@ -1187,6 +1187,7 @@ export function App() {
   const [signupRequestsLoading, setSignupRequestsLoading] = useState(false);
   const [signupRequestsError, setSignupRequestsError] = useState<string | null>(null);
   const [reviewingSignupRequestId, setReviewingSignupRequestId] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const workspaceHasData = hasWorkspaceData(overview);
   const isPlatformAdmin = authSession?.user.role === 'platform-admin' || authSession?.user.permissions.includes('control-panel:admin') || false;
   const availableRouteTabs = useMemo(
@@ -2803,6 +2804,26 @@ export function App() {
           </nav>
 
           <div className="landing-header-controls">
+            <button
+              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              className="landing-icon-button landing-hamburger"
+              onClick={() => setMobileNavOpen((s) => !s)}
+              type="button"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button
+              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              className="landing-icon-button landing-hamburger"
+              onClick={() => setMobileNavOpen((s) => !s)}
+              type="button"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
             <a
               aria-label="Open AtonixCorp on GitHub"
               className="landing-icon-button"
@@ -2827,6 +2848,96 @@ export function App() {
             </button>
           </div>
         </header>
+
+        {mobileNavOpen && (
+          <>
+            <div className="landing-mobile-backdrop" onClick={() => setMobileNavOpen(false)} />
+            <aside className={`landing-mobile-nav ${mobileNavOpen ? 'open' : ''}`} role="dialog" aria-modal="true">
+              <div className="landing-mobile-nav-header">
+                <button className="landing-icon-button" aria-label="Close menu" onClick={() => setMobileNavOpen(false)} type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+              <nav aria-label="Mobile navigation">
+                <div className="landing-mobile-links">
+                  {landingHeaderLinks.map((link) => (
+                    <button
+                      key={link.label}
+                      className="landing-nav-link"
+                      onClick={() => { setMobileNavOpen(false); navigatePublic(link.publicPage || 'platform', link.targetId); }}
+                      type="button"
+                    >
+                      <span className="landing-nav-icon"><LandingIcon icon={link.icon} /></span>
+                      {link.label}
+                    </button>
+                  ))}
+
+                  {landingSidebarGroups.map((group) => (
+                    <div key={group.label} className="landing-mobile-group">
+                      <div className="landing-mobile-group-title">{group.label}</div>
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          className="landing-nav-link"
+                          onClick={() => { setMobileNavOpen(false); navigatePublic('platform', item.id); selectLandingPage(item.id); }}
+                          type="button"
+                        >
+                          <span className="landing-nav-icon"><LandingIcon icon={item.icon} /></span>
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </nav>
+            </aside>
+          </>
+        )}
+
+        {mobileNavOpen && (
+          <>
+            <div className="landing-mobile-backdrop" onClick={() => setMobileNavOpen(false)} />
+            <aside className={`landing-mobile-nav ${mobileNavOpen ? 'open' : ''}`} role="dialog" aria-modal="true">
+              <div className="landing-mobile-nav-header">
+                <button className="landing-icon-button" aria-label="Close menu" onClick={() => setMobileNavOpen(false)} type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+              <nav aria-label="Mobile navigation">
+                <div className="landing-mobile-links">
+                  {landingHeaderLinks.map((link) => (
+                    <button
+                      key={link.label}
+                      className="landing-nav-link"
+                      onClick={() => { setMobileNavOpen(false); navigatePublic(link.publicPage || 'platform', link.targetId); }}
+                      type="button"
+                    >
+                      <span className="landing-nav-icon"><LandingIcon icon={link.icon} /></span>
+                      {link.label}
+                    </button>
+                  ))}
+
+                  {landingSidebarGroups.map((group) => (
+                    <div key={group.label} className="landing-mobile-group">
+                      <div className="landing-mobile-group-title">{group.label}</div>
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          className="landing-nav-link"
+                          onClick={() => { setMobileNavOpen(false); navigatePublic('platform', item.id); selectLandingPage(item.id); }}
+                          type="button"
+                        >
+                          <span className="landing-nav-icon"><LandingIcon icon={item.icon} /></span>
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </nav>
+            </aside>
+          </>
+        )}
 
         <section className="landing-hero-shell" onPointerLeave={resetLandingHeroPointer} onPointerMove={handleLandingHeroPointerMove}>
           <div aria-hidden="true" className="landing-hero-background" style={heroBackgroundStyle}>
