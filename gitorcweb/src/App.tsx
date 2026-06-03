@@ -1170,7 +1170,7 @@ export function App() {
   const [signupForm, setSignupForm] = useState({ username: '', email: '', password: '' });
   const [signupSubmitting, setSignupSubmitting] = useState(false);
   const [overview, setOverview] = useState<Overview | null>(null);
-  const [isLoading, setIsLoading] = useState(() => !publicLandingMode);
+  const [isLoading, setIsLoading] = useState(() => !publicLandingMode && readStoredAuthToken() !== null);
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<FocusState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -1188,6 +1188,7 @@ export function App() {
   const [signupRequestsError, setSignupRequestsError] = useState<string | null>(null);
   const [reviewingSignupRequestId, setReviewingSignupRequestId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const showPublicLanding = publicLandingMode || authToken === null;
   const workspaceHasData = hasWorkspaceData(overview);
   const isPlatformAdmin = authSession?.user.role === 'platform-admin' || authSession?.user.permissions.includes('control-panel:admin') || false;
   const availableRouteTabs = useMemo(
@@ -1217,9 +1218,7 @@ export function App() {
   useEffect(() => {
     let active = true;
 
-    if (publicLandingMode) {
-      storeAuthToken(null);
-      setAuthToken(null);
+    if (showPublicLanding) {
       setAuthSession(null);
       setAuthChecking(false);
       setIsLoading(false);
@@ -1264,7 +1263,7 @@ export function App() {
 
     let interval: number | undefined;
 
-    if (publicLandingMode) {
+    if (showPublicLanding) {
       setIsLoading(false);
       setError(null);
       return () => {
@@ -1323,12 +1322,12 @@ export function App() {
         window.clearInterval(interval);
       }
     };
-  }, [authSession?.token, publicLandingMode]);
+  }, [authSession?.token, showPublicLanding, authToken]);
 
   useEffect(() => {
     let active = true;
 
-    if (publicLandingMode || !authSession?.token || !isPlatformAdmin) {
+    if (showPublicLanding || !authSession?.token || !isPlatformAdmin) {
       setSignupRequests([]);
       setSignupRequestsError(null);
       setSignupRequestsLoading(false);
@@ -1362,7 +1361,7 @@ export function App() {
     return () => {
       active = false;
     };
-  }, [authSession?.token, isPlatformAdmin, publicLandingMode]);
+  }, [authSession?.token, isPlatformAdmin, showPublicLanding]);
 
   useEffect(() => {
     if (!toast) {
@@ -1530,7 +1529,7 @@ export function App() {
   };
 
   const selectLandingPage = (pageId: LandingPageId) => {
-    if (publicLandingMode) {
+    if (showPublicLanding) {
       navigatePublic('platform', pageId);
       return;
     }
@@ -1654,7 +1653,7 @@ export function App() {
       setAuthSession(session);
       setToast(`Welcome back, ${session.user.full_name}.`);
 
-      if (publicLandingMode) {
+      if (showPublicLanding) {
         navigateTo('overview');
       } else {
         window.location.hash = toHash('overview');
@@ -2677,7 +2676,7 @@ export function App() {
   };
 
   const renderProjectForm = () => {
-    if (publicLandingMode || projectFormMode === 'closed') {
+    if (showPublicLanding || projectFormMode === 'closed') {
       return null;
     }
 
@@ -2783,7 +2782,6 @@ export function App() {
             <span className="landing-brand-mark"><LandingSystemMark /></span>
             <span className="landing-brand-copy">
               <strong>GITORC</strong>
-              <span>Hardware-Software CI/CD Automation Platform</span>
             </span>
           </button>
 
@@ -2974,7 +2972,6 @@ export function App() {
             <span className="landing-brand-mark"><LandingSystemMark /></span>
             <span className="landing-brand-copy">
               <strong>GITORC</strong>
-              <span>Standard platform</span>
             </span>
           </button>
 
@@ -3354,11 +3351,11 @@ export function App() {
         </section>
       ) : null}
 
-      {!isLoading && !error && publicLandingMode && publicPage === 'home' ? renderLandingPage() : null}
-      {!isLoading && !error && publicLandingMode && publicPage === 'platform' ? renderPlatformPage() : null}
-      {!isLoading && !error && (publicLandingMode ? publicPage === 'signin' : !authSession && !authChecking) ? renderSignInPage() : null}
-      {!isLoading && !error && publicLandingMode && publicPage === 'signup' ? renderSignUpPage() : null}
-      {!isLoading && !error && !publicLandingMode && authSession ? renderScreen() : null}
+      {!isLoading && !error && showPublicLanding && publicPage === 'home' ? renderLandingPage() : null}
+      {!isLoading && !error && showPublicLanding && publicPage === 'platform' ? renderPlatformPage() : null}
+      {!isLoading && !error && (showPublicLanding ? publicPage === 'signin' : !authSession && !authChecking) ? renderSignInPage() : null}
+      {!isLoading && !error && showPublicLanding && publicPage === 'signup' ? renderSignUpPage() : null}
+      {!isLoading && !error && !showPublicLanding && authSession ? renderScreen() : null}
     </main>
   );
 }
