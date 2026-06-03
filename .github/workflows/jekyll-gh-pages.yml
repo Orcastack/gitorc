@@ -32,19 +32,19 @@ jobs:
       GITORC_REPOSITORY_IDENTITY: orca:repo:3f6d8c3e-6c96-4d8c-a2d3-6f4a8f4b7f2a
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
           cache: npm
           cache-dependency-path: gitorcweb/package-lock.json
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.23'
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Install frontend dependencies
         working-directory: gitorcweb
         run: npm ci
@@ -64,7 +64,7 @@ jobs:
           go run ./cmd/gitorc-secctl attest --repository-identity "$GITORC_REPOSITORY_IDENTITY" --component-identity orca:service:6fb4b8d3-32e3-4725-bd52-db9f5a6d0f14 --binary-path ../gitorcweb/dist/index.html --build-reference "${GITHUB_SHA}:pages" --private-key dist/pages-signing/private.pem --public-key dist/pages-signing/public.pem --output ../gitorcweb/dist/orca-attestation.json
           cp dist/pages-signing/public.pem ../gitorcweb/dist/orca-public.pem
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: gitorcweb/dist
 
@@ -78,4 +78,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5

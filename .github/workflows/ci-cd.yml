@@ -14,10 +14,10 @@ jobs:
       GITORC_REPOSITORY_IDENTITY: orca:repo:3f6d8c3e-6c96-4d8c-a2d3-6f4a8f4b7f2a
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: '1.23'
 
@@ -51,7 +51,7 @@ jobs:
         ./dist/gitorc-secctl attest --repository-identity "$GITORC_REPOSITORY_IDENTITY" --component-identity orca:service:f4ea4140-9117-4351-b0f4-71d90b4cd0b5 --binary-path dist/gitorc-analytics-service --build-reference "${GITHUB_SHA}:gitorc-analytics-service" --private-key dist/signing/private.pem --public-key dist/signing/public.pem --output dist/attestations/analytics-service.json
 
     - name: Upload signed API artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: gitorc-api-signed
         path: gitorcapi/dist
@@ -60,10 +60,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
       with:
         terraform_version: 1.8.5
 
@@ -87,7 +87,7 @@ jobs:
         test -f infra/kubernetes/platform/gpu-support.yaml
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: '3.12'
 
@@ -104,7 +104,7 @@ jobs:
         ansible-playbook --syntax-check -i infra/ansible/inventories/private-cloud/hosts.yml infra/ansible/playbooks/gpu-workers.yml
 
     - name: Evaluate runtime policy
-      uses: open-policy-agent/setup-opa@v2
+      uses: open-policy-agent/setup-opa@34a30e8a924d1b03ce2cf7abe97250bbb1f332b5 # v2
       with:
         version: latest
 
@@ -120,10 +120,10 @@ jobs:
       GITORC_REPOSITORY_IDENTITY: orca:repo:3f6d8c3e-6c96-4d8c-a2d3-6f4a8f4b7f2a
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: '20'
         cache: 'npm'
@@ -135,7 +135,7 @@ jobs:
         npm ci
 
     - name: Set up Go for attestation tool
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: '1.23'
 
@@ -152,7 +152,7 @@ jobs:
         go run ./cmd/gitorc-secctl attest --repository-identity "$GITORC_REPOSITORY_IDENTITY" --component-identity orca:service:6fb4b8d3-32e3-4725-bd52-db9f5a6d0f14 --binary-path ../gitorcweb/dist/index.html --build-reference "${GITHUB_SHA}:gitorcweb" --private-key dist/web-signing/private.pem --public-key dist/web-signing/public.pem --output ../gitorcweb/dist/orca-attestation.json
 
     - name: Upload signed frontend artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: gitorc-web-signed
         path: |
@@ -164,10 +164,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: '1.24'
 
