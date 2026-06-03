@@ -125,6 +125,55 @@ export type EventEntry = {
   summary: string;
 };
 
+export type CloudLayer = {
+  name: string;
+  platform: string;
+  status: string;
+  endpoint: string;
+  identity: string;
+  summary: string;
+  coverage: string[];
+};
+
+export type Cluster = {
+  id: string;
+  name: string;
+  provider: string;
+  status: string;
+  version: string;
+  control_planes: number;
+  workers: number;
+  gpu_workers: number;
+  rancher_project: string;
+  registration_status: string;
+  upgrade_policy: string;
+  api_endpoint: string;
+};
+
+export type AutomationLane = {
+  name: string;
+  type: string;
+  status: string;
+  entrypoint: string;
+  target: string;
+  last_run: string;
+};
+
+export type ObservabilitySurface = {
+  name: string;
+  kind: string;
+  status: string;
+  endpoint: string;
+  backing: string;
+};
+
+export type SelfManagementCapability = {
+  name: string;
+  status: string;
+  workflow: string;
+  summary: string;
+};
+
 export type Metric = {
   label: string;
   value: string;
@@ -144,6 +193,11 @@ export type Overview = {
   updated_at: string;
   metrics: Metric[];
   activity: string[];
+  cloud_layers: CloudLayer[];
+  clusters: Cluster[];
+  automation_lanes: AutomationLane[];
+  observability: ObservabilitySurface[];
+  self_management: SelfManagementCapability[];
 };
 
 export type AuthUser = {

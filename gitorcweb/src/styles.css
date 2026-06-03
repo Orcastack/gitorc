@@ -1597,6 +1597,303 @@ h1 {
   padding: 1.55rem;
 }
 
+.dashboard-shell {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1rem;
+  min-height: calc(100vh - 4rem);
+}
+
+.dashboard-sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  min-height: calc(100vh - 4rem);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+}
+
+.dashboard-brand-block,
+.dashboard-sidebar-footer,
+.dashboard-nav-item,
+.dashboard-topbar,
+.dashboard-topbar-actions,
+.dashboard-topbar-meta,
+.dashboard-avatar-button,
+.dashboard-avatar-copy,
+.settings-nav-item,
+.dashboard-modal-card,
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-brand-block {
+  gap: 0.85rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-brand-mark svg {
+  width: 24px;
+  height: 24px;
+}
+
+.dashboard-brand-block strong,
+.dashboard-avatar-copy strong,
+.dashboard-nav-copy strong,
+.settings-nav-item strong,
+.dashboard-sidebar-footer strong {
+  display: block;
+}
+
+.dashboard-brand-block span,
+.dashboard-avatar-copy span,
+.dashboard-nav-copy span,
+.settings-nav-item span,
+.dashboard-sidebar-footer span {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.dashboard-nav-list,
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.dashboard-nav-item,
+.settings-nav-item {
+  width: 100%;
+  gap: 0.8rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  color: inherit;
+  text-align: left;
+}
+
+.dashboard-nav-item-active,
+.settings-nav-item-active {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dashboard-nav-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dashboard-sidebar-footer {
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.status-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: #9ca3af;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.04);
+}
+
+.status-dot-online { background: #22c55e; }
+.status-dot-away { background: #f59e0b; }
+.status-dot-busy { background: #ef4444; }
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.dashboard-topbar {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-topbar-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dashboard-topbar-copy h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+}
+
+.dashboard-topbar-copy p {
+  margin: 0;
+  color: var(--ink);
+  max-width: 72ch;
+}
+
+.dashboard-topbar-actions {
+  gap: 0.8rem;
+  justify-content: flex-end;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.dashboard-topbar-meta {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dashboard-profile-menu-shell {
+  position: relative;
+}
+
+.dashboard-avatar-button {
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+.dashboard-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #d9d9d9;
+  color: #151515;
+  font-weight: 700;
+}
+
+.dashboard-avatar-copy {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.dashboard-avatar-caret {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  width: 240px;
+  padding: 0.45rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #121212;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+}
+
+.profile-dropdown-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.8rem 0.9rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+}
+
+.profile-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.profile-dropdown-item-danger {
+  color: #fca5a5;
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.dashboard-page-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.settings-sidebar {
+  align-self: start;
+  position: sticky;
+  top: 1rem;
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+.wiki-layout .settings-nav-item-active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dashboard-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(5, 5, 5, 0.76);
+  z-index: 70;
+}
+
+.dashboard-modal-card {
+  width: min(620px, 100%);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+
 .gitlab-shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -3091,6 +3388,7 @@ button, a, input, textarea, select { transition: color var(--p-dur-1) var(--p-ea
   border-radius: inherit;
   padding: 1px;
   background: linear-gradient(135deg, rgba(92,200,255,0), rgba(160,107,255,0));
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;

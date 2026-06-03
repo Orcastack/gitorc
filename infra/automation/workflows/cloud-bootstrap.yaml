@@ -22,6 +22,10 @@ workflow:
       type: ansible
       playbook: infra/ansible/playbooks/rancher-register.yml
       inventory: infra/ansible/inventories/private-cloud/hosts.yml
+    - name: rancher-lifecycle
+      type: ansible
+      playbook: infra/ansible/playbooks/rancher-lifecycle.yml
+      inventory: infra/ansible/inventories/private-cloud/hosts.yml
     - name: observability-stack
       type: kubernetes
       manifest: infra/kubernetes/platform/observability-stack.yaml

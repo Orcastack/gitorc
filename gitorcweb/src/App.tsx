@@ -1000,13 +1000,18 @@ function LandingIcon({ icon }: { icon: LandingIconName }) {
 }
 
 const routeTabs = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'repositories', label: 'Repositories' },
-  { id: 'reviews', label: 'Reviews' },
-  { id: 'pipelines', label: 'Pipelines' },
-  { id: 'deployments', label: 'Deployments' },
-  { id: 'containers', label: 'Containers' },
-  { id: 'access', label: 'Access requests' },
+  { id: 'overview', label: 'Overview', icon: 'overview' as LandingIconName, sidebar: true, summary: 'Unified command view across repositories, pipelines, cloud automation, and operations.' },
+  { id: 'repositories', label: 'Repositories', icon: 'repository' as LandingIconName, sidebar: true, summary: 'Code hosting, clone paths, push controls, and repository governance.' },
+  { id: 'reviews', label: 'Reviews', icon: 'workflow' as LandingIconName, sidebar: false, summary: 'Code review state and merge governance.' },
+  { id: 'pipelines', label: 'Pipelines', icon: 'pipelines' as LandingIconName, sidebar: true, summary: 'CI/CD execution, stage health, and governed delivery operations.' },
+  { id: 'deployments', label: 'Deployments', icon: 'cloud' as LandingIconName, sidebar: false, summary: 'Release rollout lanes and deployment history.' },
+  { id: 'containers', label: 'Containers', icon: 'devices' as LandingIconName, sidebar: false, summary: 'Runtime process state, logs, metrics, and placement.' },
+  { id: 'automation', label: 'Automation', icon: 'automation' as LandingIconName, sidebar: true, summary: 'Cloud workflows, control-plane automation, and self-hosting lanes.' },
+  { id: 'hardware', label: 'Hardware Integration', icon: 'devices' as LandingIconName, sidebar: true, summary: 'Bare-metal, GPU, hypervisor, and device orchestration coverage.' },
+  { id: 'software', label: 'Software Integration', icon: 'workflow' as LandingIconName, sidebar: true, summary: 'Git, CI/CD, APIs, runners, delivery integrations, and release surfaces.' },
+  { id: 'wiki', label: 'Wiki', icon: 'docs' as LandingIconName, sidebar: true, summary: 'Project-specific knowledge base, architecture notes, and operator documentation.' },
+  { id: 'settings', label: 'Settings', icon: 'control-panel' as LandingIconName, sidebar: true, summary: 'Profile, account, billing, access, notifications, templates, and quota controls.' },
+  { id: 'access', label: 'Access requests', icon: 'security' as LandingIconName, sidebar: false, summary: 'Administrative approval queue for secure platform access.' },
 ] as const;
 
 type RouteName = (typeof routeTabs)[number]['id'];
@@ -1014,6 +1019,23 @@ type RouteName = (typeof routeTabs)[number]['id'];
 type RouteState = {
   name: RouteName;
   repositoryId?: string;
+};
+
+type PreferenceSection = 'profile' | 'account' | 'billing' | 'access' | 'notifications' | 'comment-templates' | 'usage-quotas';
+
+type PresenceStatus = 'online' | 'away' | 'busy';
+
+type ProfileSettingsDraft = {
+  fullName: string;
+  email: string;
+  bio: string;
+  identity: string;
+  avatar: string;
+};
+
+type StatusSettingsDraft = {
+  availability: PresenceStatus;
+  message: string;
 };
 
 type FocusState =
@@ -1141,6 +1163,16 @@ function securityLabel(security: SecurityState) {
   return security.verified ? 'verified' : 'attention required';
 }
 
+function initialsForName(name: string) {
+  const compact = name.trim();
+  if (!compact) {
+    return 'GC';
+  }
+
+  const parts = compact.split(/\s+/).slice(0, 2);
+  return parts.map((part) => part[0]?.toUpperCase() || '').join('') || 'GC';
+}
+
 function hasWorkspaceData(overview: Overview | null) {
   if (!overview) {
     return false;
@@ -1188,11 +1220,26 @@ export function App() {
   const [signupRequestsError, setSignupRequestsError] = useState<string | null>(null);
   const [reviewingSignupRequestId, setReviewingSignupRequestId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [statusEditorOpen, setStatusEditorOpen] = useState(false);
+  const [activePreferenceSection, setActivePreferenceSection] = useState<PreferenceSection>('profile');
+  const [statusDraft, setStatusDraft] = useState<StatusSettingsDraft>({ availability: 'online', message: 'Operating the control plane.' });
+  const [profileDraftState, setProfileDraftState] = useState<ProfileSettingsDraft>({
+    fullName: 'GITORC Operator',
+    email: 'operator@gitorc.internal',
+    bio: 'Platform operator responsible for repositories, automation, and private-cloud governance.',
+    identity: 'gitorc:operator:control-plane',
+    avatar: '',
+  });
   const showPublicLanding = publicLandingMode || authToken === null;
   const workspaceHasData = hasWorkspaceData(overview);
   const isPlatformAdmin = authSession?.user.role === 'platform-admin' || authSession?.user.permissions.includes('control-panel:admin') || false;
+  const activeRouteTab = useMemo(
+    () => routeTabs.find((tab) => tab.id === route.name) ?? routeTabs[0],
+    [route.name],
+  );
   const availableRouteTabs = useMemo(
-    () => routeTabs.filter((tab) => tab.id !== 'access' || isPlatformAdmin),
+    () => routeTabs.filter((tab) => tab.sidebar),
     [isPlatformAdmin],
   );
 
@@ -1372,6 +1419,19 @@ export function App() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
+  useEffect(() => {
+    if (!authSession?.user) {
+      return;
+    }
+
+    setProfileDraftState((current) => ({
+      ...current,
+      fullName: authSession.user.full_name || current.fullName,
+      email: authSession.user.email || current.email,
+      identity: authSession.user.identity || current.identity,
+    }));
+  }, [authSession?.user.email, authSession?.user.full_name, authSession?.user.identity]);
+
   const selectedRepository = useMemo(() => {
     if (!overview) {
       return null;
@@ -1490,6 +1550,22 @@ export function App() {
   const navigateTo = (name: RouteName, repositoryId?: string) => {
     window.location.hash = toHash(name, repositoryId);
     setRoute({ name, repositoryId });
+    setProfileMenuOpen(false);
+  };
+
+  const openPreferenceSection = (section: PreferenceSection) => {
+    setActivePreferenceSection(section);
+    navigateTo('settings', selectedRepository?.id);
+  };
+
+  const saveStatusDraft = () => {
+    setStatusEditorOpen(false);
+    setProfileMenuOpen(false);
+    setToast(`Status updated to ${statusDraft.availability}${statusDraft.message ? `: ${statusDraft.message}` : '.'}`);
+  };
+
+  const saveProfileDraft = () => {
+    setToast('Profile preferences updated for the control-plane session.');
   };
 
   const handleSignupRequestReview = async (request: SignupRequestRecord, status: 'approved' | 'rejected') => {
@@ -1571,6 +1647,16 @@ export function App() {
         onClick: () => navigateTo('pipelines', selectedRepository?.id),
       },
       {
+        title: 'Identity & RBAC',
+        description: 'Review directory trust, RBAC mapping, attestation state, and cluster access governance for operators.',
+        icon: 'security' as LandingIconName,
+        actionLabel: 'Open trust view',
+        onClick: () => {
+          navigateTo('overview', selectedRepository?.id);
+          setToast('Identity and RBAC state is available through the trust chain and cluster governance panels.');
+        },
+      },
+      {
         title: 'Clusters (Rancher)',
         description: 'Surface cluster operations and Rancher-managed deployment lanes from the automation workspace.',
         icon: 'control-panel' as LandingIconName,
@@ -1614,6 +1700,103 @@ export function App() {
     ],
     [selectedRepository?.id],
   );
+
+  const renderCloudControlPanel = (compact = false) => {
+    if (!overview) {
+      return null;
+    }
+
+    return (
+      <section className="panel stack-panel dashboard-block">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">Open control panel</p>
+            <h2>Cloud infrastructure, cluster management, and self-hosting</h2>
+          </div>
+          <span className="status-badge status-primary">{overview.cloud_layers.length} layers governed</span>
+        </div>
+
+        <div className="trace-grid">
+          {overview.cloud_layers.map((layer) => (
+            <article key={layer.name} className="trace-card">
+              <div className="provider-row">
+                <strong>{layer.name}</strong>
+                <span className={`mini-badge ${statusClass(layer.status)}`}>{formatStatus(layer.status)}</span>
+              </div>
+              <p>{layer.platform}</p>
+              <p>{layer.summary}</p>
+              <ul>
+                <li>Endpoint: {layer.endpoint}</li>
+                <li>Identity: {layer.identity}</li>
+                <li>Coverage: {layer.coverage.join(' • ')}</li>
+              </ul>
+            </article>
+          ))}
+        </div>
+
+        <div className="trace-grid">
+          <article className="trace-card detail-card">
+            <p className="section-kicker">Cluster management</p>
+            <h3>Rancher and Kubernetes</h3>
+            <ul>
+              {overview.clusters.map((cluster) => (
+                <li key={cluster.id}>
+                  {cluster.name}: {cluster.provider} / {formatStatus(cluster.status)} / {cluster.control_planes} control planes / {cluster.workers} workers / {cluster.gpu_workers} GPU workers / {cluster.registration_status}
+                </li>
+              ))}
+            </ul>
+            {!compact ? (
+              <div className="action-row">
+                <button className="button button-primary" onClick={() => navigateTo('deployments', selectedRepository?.id)} type="button">Cluster management</button>
+                <button className="button button-ghost" onClick={() => navigateTo('containers', selectedRepository?.id)} type="button">Monitoring</button>
+              </div>
+            ) : null}
+          </article>
+
+          <article className="trace-card detail-card">
+            <p className="section-kicker">Cloud deployment tools</p>
+            <h3>Automation lanes</h3>
+            <ul>
+              {overview.automation_lanes.map((lane) => (
+                <li key={lane.name}>
+                  {lane.name}: {formatStatus(lane.status)} via {lane.type} at {lane.entrypoint}
+                </li>
+              ))}
+            </ul>
+            {!compact ? (
+              <div className="action-row">
+                <button className="button button-primary" onClick={() => navigateTo('pipelines', selectedRepository?.id)} type="button">Pipeline management</button>
+                <button className="button button-ghost" onClick={() => navigateTo('repositories', selectedRepository?.id)} type="button">Open repository</button>
+              </div>
+            ) : null}
+          </article>
+
+          <article className="trace-card detail-card">
+            <p className="section-kicker">Monitoring and identity</p>
+            <h3>Observability and self-management</h3>
+            <ul>
+              {overview.observability.map((surface) => (
+                <li key={surface.name}>
+                  {surface.name}: {formatStatus(surface.status)} / {surface.kind} / {surface.endpoint}
+                </li>
+              ))}
+              {overview.self_management.map((capability) => (
+                <li key={capability.name}>
+                  {capability.name}: {formatStatus(capability.status)} / {capability.workflow}
+                </li>
+              ))}
+            </ul>
+            {!compact ? (
+              <div className="action-row">
+                <button className="button button-primary" onClick={() => navigateTo('overview', selectedRepository?.id)} type="button">Open control panel</button>
+                <button className="button button-ghost" onClick={() => navigateTo('access')} type="button">Identity & RBAC</button>
+              </div>
+            ) : null}
+          </article>
+        </div>
+      </section>
+    );
+  };
 
   const renderLandingLink = (link: LandingPageLink, className: string, buttonClassName = className) => {
     if (link.external && link.href) {
@@ -1889,6 +2072,349 @@ export function App() {
     setToast(`${container.name}: ${action} selected.`);
   };
 
+  const preferenceSections = [
+    { id: 'profile' as const, label: 'Profile', description: 'Name, avatar, bio, and platform identity.' },
+    { id: 'account' as const, label: 'Account', description: 'Primary account details, session security, and identity posture.' },
+    { id: 'billing' as const, label: 'Billing', description: 'Workspace plan, cost center, invoices, and private-cloud chargeback.' },
+    { id: 'access' as const, label: 'Access', description: 'RBAC, access requests, and privilege governance.' },
+    { id: 'notifications' as const, label: 'Notifications', description: 'Operator alerts, pipeline notifications, and escalation routing.' },
+    { id: 'comment-templates' as const, label: 'Comment Templates', description: 'Reusable review, release, and operator response templates.' },
+    { id: 'usage-quotas' as const, label: 'Usage Quotas', description: 'Repository, pipeline, runner, and GPU consumption limits.' },
+  ];
+
+  const renderPageHero = (eyebrow: string, title: string, description: string, actions?: React.ReactNode) => (
+    <section className="panel dashboard-page-hero">
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2>{title}</h2>
+        <p className="lede">{description}</p>
+      </div>
+      {actions ? <div className="header-actions">{actions}</div> : null}
+    </section>
+  );
+
+  const renderDashboardSidebar = () => (
+    <aside className="dashboard-sidebar panel">
+      <div className="dashboard-brand-block">
+        <span className="dashboard-brand-mark"><LandingSystemMark /></span>
+        <div>
+          <strong>GITORC</strong>
+          <span>Unified operations command center</span>
+        </div>
+      </div>
+
+      <div className="sidebar-group">
+        <p className="section-kicker">Workspace navigation</p>
+        <nav className="dashboard-nav-list" aria-label="Primary dashboard sections">
+          {availableRouteTabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`dashboard-nav-item ${route.name === tab.id ? 'dashboard-nav-item-active' : ''}`}
+              onClick={() => navigateTo(tab.id, tab.id === 'settings' || tab.id === 'wiki' ? selectedRepository?.id : selectedRepository?.id)}
+              type="button"
+            >
+              <span className="dashboard-nav-icon"><LandingIcon icon={tab.icon} /></span>
+              <span className="dashboard-nav-copy">
+                <strong>{tab.label}</strong>
+                <span>{tab.summary}</span>
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div className="sidebar-group">
+        <p className="section-kicker">Projects</p>
+        <div className="project-nav-list">
+          {(overview?.repositories || []).map((repository) => (
+            <button
+              key={repository.id}
+              className={`project-nav-item ${selectedRepository?.id === repository.id ? 'project-nav-item-active' : ''}`}
+              onClick={() => {
+                setFocus({ kind: 'repository', id: repository.id });
+                navigateTo(route.name, repository.id);
+              }}
+              type="button"
+            >
+              <strong>{repository.name}</strong>
+              <span>{repository.provider_id}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="dashboard-sidebar-footer">
+        <span className={`status-dot status-dot-${statusDraft.availability}`} />
+        <div>
+          <strong>{formatStatus(statusDraft.availability)}</strong>
+          <span>{statusDraft.message || 'No status message set.'}</span>
+        </div>
+      </div>
+    </aside>
+  );
+
+  const renderProfileDropdown = () => {
+    if (!profileMenuOpen) {
+      return null;
+    }
+
+    return (
+      <div className="profile-dropdown" role="menu" aria-label="User profile menu">
+        <button className="profile-dropdown-item" onClick={() => { setStatusEditorOpen(true); setProfileMenuOpen(false); }} type="button">Edit Status</button>
+        <button className="profile-dropdown-item" onClick={() => openPreferenceSection('profile')} type="button">Edit Profile</button>
+        <button className="profile-dropdown-item" onClick={() => openPreferenceSection(activePreferenceSection)} type="button">Preferences</button>
+        <button className="profile-dropdown-item profile-dropdown-item-danger" onClick={() => void handleLogout()} type="button">Logout</button>
+      </div>
+    );
+  };
+
+  const renderDashboardTopbar = () => (
+    <header className="panel dashboard-topbar">
+      <div className="dashboard-topbar-copy">
+        <p className="eyebrow">enterprise dashboard</p>
+        <h1>{route.name === 'settings' ? 'Preferences' : activeRouteTab.label}</h1>
+        <p>{route.name === 'settings' ? 'Control your profile, account, billing, access, notifications, templates, and quotas from one settings center.' : activeRouteTab.summary}</p>
+      </div>
+
+      <div className="dashboard-topbar-actions">
+        <div className="dashboard-topbar-meta">
+          <span className="status-badge status-primary">{selectedRepository?.name || 'No project selected'}</span>
+          <span className="status-badge">Updated {overview ? formatTime(overview.updated_at) : 'pending'}</span>
+        </div>
+        <div className="dashboard-profile-menu-shell">
+          <button className="dashboard-avatar-button" onClick={() => setProfileMenuOpen((current) => !current)} type="button" aria-haspopup="menu" aria-expanded={profileMenuOpen}>
+            <span className="dashboard-avatar-initials">{initialsForName(profileDraftState.fullName)}</span>
+            <span className="dashboard-avatar-copy">
+              <strong>{profileDraftState.fullName}</strong>
+              <span>{statusDraft.availability}</span>
+            </span>
+            <span className="dashboard-avatar-caret">▾</span>
+          </button>
+          {renderProfileDropdown()}
+        </div>
+      </div>
+    </header>
+  );
+
+  const renderStatusEditor = () => {
+    if (!statusEditorOpen) {
+      return null;
+    }
+
+    return (
+      <section className="dashboard-overlay" role="dialog" aria-modal="true" aria-label="Edit status">
+        <div className="panel dashboard-modal-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">Edit status</p>
+              <h2>Update presence for the control plane</h2>
+            </div>
+          </div>
+          <div className="form-grid">
+            <label className="form-field">
+              <span>Status</span>
+              <select value={statusDraft.availability} onChange={(event) => setStatusDraft((current) => ({ ...current, availability: event.target.value as PresenceStatus }))}>
+                <option value="online">Online</option>
+                <option value="away">Away</option>
+                <option value="busy">Busy</option>
+              </select>
+            </label>
+            <label className="form-field form-field-wide">
+              <span>Custom message</span>
+              <input value={statusDraft.message} onChange={(event) => setStatusDraft((current) => ({ ...current, message: event.target.value }))} type="text" placeholder="Working on private-cloud orchestration" />
+            </label>
+          </div>
+          <div className="project-form-actions">
+            <button className="button button-primary" onClick={saveStatusDraft} type="button">Save status</button>
+            <button className="button button-ghost" onClick={() => setStatusEditorOpen(false)} type="button">Cancel</button>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  const renderSettingsContent = () => {
+    switch (activePreferenceSection) {
+      case 'profile':
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Profile</p><h2>Edit profile</h2></div></div>
+            <div className="form-grid">
+              <label className="form-field"><span>Name</span><input type="text" value={profileDraftState.fullName} onChange={(event) => setProfileDraftState((current) => ({ ...current, fullName: event.target.value }))} /></label>
+              <label className="form-field"><span>Avatar URL</span><input type="text" value={profileDraftState.avatar} onChange={(event) => setProfileDraftState((current) => ({ ...current, avatar: event.target.value }))} placeholder="https://assets.internal/avatar.png" /></label>
+              <label className="form-field"><span>Email</span><input type="email" value={profileDraftState.email} onChange={(event) => setProfileDraftState((current) => ({ ...current, email: event.target.value }))} /></label>
+              <label className="form-field"><span>Identity</span><input type="text" value={profileDraftState.identity} onChange={(event) => setProfileDraftState((current) => ({ ...current, identity: event.target.value }))} /></label>
+              <label className="form-field form-field-wide"><span>Bio</span><textarea rows={4} value={profileDraftState.bio} onChange={(event) => setProfileDraftState((current) => ({ ...current, bio: event.target.value }))} /></label>
+            </div>
+            <div className="project-form-actions"><button className="button button-primary" onClick={saveProfileDraft} type="button">Save profile</button></div>
+          </section>
+        );
+      case 'account':
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Account</p><h2>Identity, sessions, and account posture</h2></div></div>
+            <div className="trace-grid">
+              <article className="trace-card"><h3>Session security</h3><ul><li>Role: {authSession?.user.role || 'operator'}</li><li>RBAC realm: {authSession?.user.rbac_realm || 'control-plane'}</li><li>Identity: {authSession?.user.identity || profileDraftState.identity}</li></ul></article>
+              <article className="trace-card"><h3>Permissions</h3><ul>{(authSession?.user.permissions || ['repositories:write', 'pipelines:operate', 'cloud:read']).map((permission) => (<li key={permission}>{permission}</li>))}</ul></article>
+            </div>
+          </section>
+        );
+      case 'billing':
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Billing</p><h2>Plan, spend, and chargeback</h2></div></div>
+            <div className="metrics-grid metrics-grid-compact">
+              <article className="metric-card metric-card-compact"><p>Plan</p><strong>Enterprise Sovereign</strong><span>Unified hardware, software, and automation operations.</span></article>
+              <article className="metric-card metric-card-compact"><p>Monthly usage</p><strong>$18,240</strong><span>Estimated from runners, GPU, and storage consumption.</span></article>
+              <article className="metric-card metric-card-compact"><p>Cost center</p><strong>Platform Ops</strong><span>Default chargeback target for managed cloud operations.</span></article>
+            </div>
+          </section>
+        );
+      case 'access':
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Access</p><h2>Identity and access governance</h2></div></div>
+            <div className="trace-grid">
+              <article className="trace-card"><h3>Directory posture</h3><ul><li>LDAP: {overview?.security.directory.ldap_registered ? 'registered' : 'pending'}</li><li>RBAC: {overview?.security.directory.rbac_verified ? 'verified' : 'pending'}</li><li>Attestation: {overview?.security.directory.attestation_signed ? 'signed' : 'pending'}</li></ul></article>
+              <article className="trace-card"><h3>Access requests</h3><p>{isPlatformAdmin ? 'Administrative review queue is available from this settings center.' : 'Administrative review requires platform-admin access.'}</p>{isPlatformAdmin ? <button className="button button-primary" onClick={() => navigateTo('access')} type="button">Open access requests</button> : null}</article>
+            </div>
+          </section>
+        );
+      case 'notifications':
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Notifications</p><h2>Operator alerts and routing</h2></div></div>
+            <div className="trace-grid">
+              <article className="trace-card"><h3>Pipeline alerts</h3><p>Route failures, approvals, and release drift to Slack, Discord, and email.</p></article>
+              <article className="trace-card"><h3>Infrastructure alerts</h3><p>Prometheus and Grafana surfaces notify operators when clusters, runners, or GPU pools degrade.</p></article>
+            </div>
+          </section>
+        );
+      case 'comment-templates':
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Comment Templates</p><h2>Reusable operator and review responses</h2></div></div>
+            <div className="trace-grid">
+              <article className="trace-card"><h3>Release hold</h3><p>Use consistent approval language for blocked deployments, compliance gates, and promotion holds.</p></article>
+              <article className="trace-card"><h3>Infrastructure incident</h3><p>Standardize cloud incident updates across repositories, wiki notes, and operations channels.</p></article>
+            </div>
+          </section>
+        );
+      case 'usage-quotas':
+      default:
+        return (
+          <section className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Usage Quotas</p><h2>Repository, runner, and GPU limits</h2></div></div>
+            <div className="metrics-grid metrics-grid-compact">
+              <article className="metric-card metric-card-compact"><p>Repositories</p><strong>{overview?.repositories.length || 0}/200</strong><span>Private hosted repositories in this control plane.</span></article>
+              <article className="metric-card metric-card-compact"><p>Pipelines</p><strong>{overview?.pipelines.length || 0}/120</strong><span>Governed automation lanes and CI/CD workflows.</span></article>
+              <article className="metric-card metric-card-compact"><p>GPU workers</p><strong>{overview?.clusters.reduce((sum, cluster) => sum + cluster.gpu_workers, 0) || 0}/12</strong><span>Accelerated compute reserved for AI and HPC workloads.</span></article>
+            </div>
+          </section>
+        );
+    }
+  };
+
+  const renderSettingsPage = () => (
+    <>
+      {renderPageHero('settings center', 'Preferences', 'Manage the full user settings system from one structured enterprise surface.', (
+        <>
+          <button className="button button-primary" onClick={() => openPreferenceSection('profile')} type="button">Profile</button>
+          <button className="button button-ghost" onClick={() => setStatusEditorOpen(true)} type="button">Edit status</button>
+        </>
+      ))}
+      <section className="settings-layout">
+        <aside className="panel settings-sidebar">
+          <p className="section-kicker">Preferences</p>
+          <nav className="settings-nav" aria-label="Preferences sections">
+            {preferenceSections.map((section) => (
+              <button key={section.id} className={`settings-nav-item ${activePreferenceSection === section.id ? 'settings-nav-item-active' : ''}`} onClick={() => setActivePreferenceSection(section.id)} type="button">
+                <strong>{section.label}</strong>
+                <span>{section.description}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+        <div className="settings-content">{renderSettingsContent()}</div>
+      </section>
+    </>
+  );
+
+  const renderAutomationPage = () => (
+    <>
+      {renderPageHero('automation', 'Automation', 'Operate end-to-end cloud workflows, self-hosting lanes, and governed orchestration from one page.')}
+      {renderCloudControlPanel()}
+      <section className="panel stack-panel dashboard-block">
+        <div className="section-heading"><div><p className="section-kicker">Automation lanes</p><h2>Workflow inventory</h2></div></div>
+        <div className="trace-grid">
+          {overview?.automation_lanes.map((lane) => (
+            <article key={lane.name} className="trace-card"><h3>{lane.name}</h3><ul><li>Type: {lane.type}</li><li>Status: {formatStatus(lane.status)}</li><li>Entrypoint: {lane.entrypoint}</li><li>Target: {lane.target}</li></ul></article>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+
+  const renderHardwarePage = () => (
+    <>
+      {renderPageHero('hardware integration', 'Hardware Integration', 'Manage bare metal, VM hosts, GPU nodes, and runtime placement as first-class platform surfaces.')}
+      <section className="trace-grid">
+        <article className="trace-card"><h3>Proxmox and bare metal</h3><p>GITORC coordinates hypervisor bootstrap, VM capacity, and foundation hosts for the private cloud.</p></article>
+        <article className="trace-card"><h3>GPU workloads</h3><p>{overview?.clusters.reduce((sum, cluster) => sum + cluster.gpu_workers, 0) || 0} GPU workers are tracked across managed clusters for AI, HPC, and accelerated pipelines.</p></article>
+        <article className="trace-card"><h3>Runtime observability</h3><p>Hardware-linked services report through Prometheus, Grafana, and the runtime monitor to keep placement predictable.</p></article>
+      </section>
+      {renderProcessesPanel()}
+    </>
+  );
+
+  const renderSoftwarePage = () => (
+    <>
+      {renderPageHero('software integration', 'Software Integration', 'Bring Git hosting, CI/CD, delivery, APIs, and operational tooling into one structured platform surface.')}
+      {renderRepositoriesPanel()}
+      {renderPipelinesPanel()}
+    </>
+  );
+
+  const renderWikiPage = () => (
+    <>
+      {renderPageHero('project wiki', 'Wiki', 'Every project has a dedicated documentation space inside the main content area.')}
+      <section className="settings-layout wiki-layout">
+        <aside className="panel settings-sidebar">
+          <p className="section-kicker">Wiki navigation</p>
+          <nav className="settings-nav" aria-label="Wiki pages">
+            {['Home', 'Architecture', 'Deployment', 'API Contracts', 'Security Directive', 'Roadmap'].map((page) => (
+              <button key={page} className="settings-nav-item settings-nav-item-active" onClick={() => setToast(`${page} wiki page selected.`)} type="button">
+                <strong>{page}</strong>
+                <span>{selectedRepository ? `${selectedRepository.name} wiki page` : 'Project wiki page'}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+        <section className="settings-content">
+          <article className="panel stack-panel dashboard-block">
+            <div className="section-heading"><div><p className="section-kicker">Wiki page</p><h2>{selectedRepository ? `${selectedRepository.name} documentation` : 'Project wiki'}</h2></div></div>
+            <p>The wiki opens as a full page in the main content area so operators can move between repositories, automation, and reference material without leaving the dashboard.</p>
+            <div className="trace-grid">
+              <article className="trace-card"><h3>Architecture</h3><p>Document platform flows, cloud topology, identity boundaries, and repository relationships.</p></article>
+              <article className="trace-card"><h3>Operations</h3><p>Store runbooks, recovery steps, and release notes alongside the project lifecycle.</p></article>
+            </div>
+          </article>
+        </section>
+      </section>
+    </>
+  );
+
+  const renderDashboardShell = (content: React.ReactNode) => (
+    <section className="dashboard-shell">
+      {renderStatusEditor()}
+      {renderDashboardSidebar()}
+      <div className="dashboard-main">
+        {renderDashboardTopbar()}
+        <div className="dashboard-content">{content}</div>
+      </div>
+    </section>
+  );
+
   const renderRepositoriesPanel = () => {
     if (!overview || !selectedRepository) {
       return null;
@@ -1969,100 +2495,43 @@ export function App() {
     }
 
     return (
-      <section className="gitlab-shell">
-        <aside className="gitlab-sidebar panel">
-          <div className="sidebar-group">
-            <p className="section-kicker">Workspace sections</p>
-            {availableRouteTabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`button ${route.name === tab.id ? 'button-primary' : 'button-ghost'} sidebar-button`}
-                onClick={() => navigateTo(tab.id, tab.id === 'access' ? undefined : selectedRepository.id)}
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="sidebar-group">
-            <p className="section-kicker">Tracked projects</p>
-            <div className="project-nav-list">
-              {overview.repositories.map((repository) => (
-                <button
-                  key={repository.id}
-                  className={`project-nav-item ${selectedRepository.id === repository.id ? 'project-nav-item-active' : ''}`}
-                  onClick={() => {
-                    setFocus({ kind: 'repository', id: repository.id });
-                    navigateTo('overview', repository.id);
-                  }}
-                  type="button"
-                >
-                  <strong>{repository.name}</strong>
-                  <span>{repository.provider_id}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </aside>
+      <>
+        {renderPageHero('overview', 'Command center overview', 'Inspect repositories, delivery state, live cloud operations, and trust posture from one predictable enterprise workspace.', (
+          <>
+            <button className="button button-primary" onClick={() => openProjectForm('create')} type="button">Create project</button>
+            <button className="button button-ghost" onClick={() => openProjectForm('import')} type="button">Import Git repository</button>
+          </>
+        ))}
 
-        <div className="gitlab-main">
-          <section className="gitlab-header panel">
-            <div>
-              <p className="eyebrow">gitorc dashboard</p>
-              <h2>Projects, delivery, runtime, and trust in one control plane</h2>
-              <p className="lede">The overview now behaves like a project operations home: create projects, inspect repositories, run CI, deploy builds, and trace every action through its signed identity chain.</p>
-            </div>
-            <div className="header-actions">
-              <button className="button button-primary" onClick={() => openProjectForm('create')} type="button">
-                Create project
+        <section className="dashboard-shortcut-grid">
+          {dashboardShortcutCards.map((card) => (
+            <article key={card.title} className="panel dashboard-shortcut-card">
+              <span className="dashboard-shortcut-icon"><LandingIcon icon={card.icon} /></span>
+              <div>
+                <p className="section-kicker">Dashboard access</p>
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </div>
+              <button className="button button-ghost" onClick={card.onClick} type="button">
+                {card.actionLabel}
               </button>
-              <button className="button button-ghost" onClick={() => openProjectForm('import')} type="button">
-                Import Git repository
-              </button>
-              <button className="button button-primary" onClick={() => navigateTo('repositories', selectedRepository.id)} type="button">
-                Repositories
-              </button>
-              <button className="button button-ghost" onClick={() => navigateTo('pipelines', selectedRepository.id)} type="button">
-                Pipelines
-              </button>
-              <button className="button button-ghost" onClick={() => navigateTo('deployments', selectedRepository.id)} type="button">
-                Deployments
-              </button>
-              {authSession ? (
-                <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
-                  Sign out
-                </button>
-              ) : null}
-            </div>
-          </section>
+            </article>
+          ))}
+        </section>
 
-          <section className="dashboard-shortcut-grid">
-            {dashboardShortcutCards.map((card) => (
-              <article key={card.title} className="panel dashboard-shortcut-card">
-                <span className="dashboard-shortcut-icon"><LandingIcon icon={card.icon} /></span>
-                <div>
-                  <p className="section-kicker">Dashboard access</p>
-                  <h3>{card.title}</h3>
-                  <p>{card.description}</p>
-                </div>
-                <button className="button button-ghost" onClick={card.onClick} type="button">
-                  {card.actionLabel}
-                </button>
-              </article>
-            ))}
-          </section>
+        <section className="metrics-grid metrics-grid-compact">
+          {overview.metrics.map((metric) => (
+            <article key={metric.label} className="metric-card metric-card-compact">
+              <p>{metric.label}</p>
+              <strong>{metric.value}</strong>
+              <span>{metric.hint}</span>
+            </article>
+          ))}
+        </section>
 
-          <section className="metrics-grid metrics-grid-compact">
-            {overview.metrics.map((metric) => (
-              <article key={metric.label} className="metric-card metric-card-compact">
-                <p>{metric.label}</p>
-                <strong>{metric.value}</strong>
-                <span>{metric.hint}</span>
-              </article>
-            ))}
-          </section>
+        {renderCloudControlPanel()}
 
-          <section className="panel stack-panel dashboard-block">
+        <section className="panel stack-panel dashboard-block">
             <div className="section-heading">
               <div>
                 <p className="section-kicker">Project inventory</p>
@@ -2102,9 +2571,9 @@ export function App() {
                 );
               })}
             </div>
-          </section>
+        </section>
 
-          <section className="gitlab-grid-two">
+        <section className="gitlab-grid-two">
             <section className="panel stack-panel dashboard-block">
               <div className="section-heading">
                 <div>
@@ -2167,9 +2636,9 @@ export function App() {
                 ))}
               </div>
             </section>
-          </section>
+        </section>
 
-          <section className="gitlab-grid-two">
+        <section className="gitlab-grid-two">
             <section className="panel stack-panel dashboard-block">
               <div className="section-heading">
                 <div>
@@ -2218,9 +2687,9 @@ export function App() {
                 </article>
               </div>
             </section>
-          </section>
+        </section>
 
-          <section className="panel stack-panel dashboard-block">
+        <section className="panel stack-panel dashboard-block">
             <div className="section-heading">
               <div>
                 <p className="section-kicker">Logs / events stream</p>
@@ -2261,73 +2730,17 @@ export function App() {
                 </article>
               ))}
             </div>
-          </section>
-        </div>
-      </section>
+        </section>
+      </>
     );
   };
 
   const renderAccessReviewScreen = () => {
-    const repositoryForNavigation = selectedRepository?.id ?? overview?.repositories[0]?.id;
-
     return (
-      <section className="gitlab-shell">
-        <aside className="gitlab-sidebar panel">
-          <div className="sidebar-group">
-            <p className="section-kicker">Workspace sections</p>
-            {availableRouteTabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`button ${route.name === tab.id ? 'button-primary' : 'button-ghost'} sidebar-button`}
-                onClick={() => navigateTo(tab.id, tab.id === 'access' ? undefined : repositoryForNavigation)}
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {overview?.repositories.length ? (
-            <div className="sidebar-group">
-              <p className="section-kicker">Tracked projects</p>
-              <div className="project-nav-list">
-                {overview.repositories.map((repository) => (
-                  <button
-                    key={repository.id}
-                    className={`project-nav-item ${selectedRepository?.id === repository.id ? 'project-nav-item-active' : ''}`}
-                    onClick={() => {
-                      setFocus({ kind: 'repository', id: repository.id });
-                      navigateTo('overview', repository.id);
-                    }}
-                    type="button"
-                  >
-                    <strong>{repository.name}</strong>
-                    <span>{repository.provider_id}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </aside>
-
-        <div className="gitlab-main">
-          <section className="gitlab-header panel">
-            <div>
-              <p className="eyebrow">gitorc dashboard</p>
-              <h2>Access requests and administrator approvals</h2>
-              <p className="lede">Review pending signup requests, approve access for operators, or reject requests with an audit note.</p>
-            </div>
-            <div className="header-actions">
-              {authSession ? (
-                <button className="button button-ghost" onClick={() => void handleLogout()} type="button">
-                  Sign out
-                </button>
-              ) : null}
-            </div>
-          </section>
-
-          {renderSignupRequestsPanel()}
-        </div>
-      </section>
+      <>
+        {renderPageHero('access governance', 'Access requests and approvals', 'Review pending operator signup requests, approve access, and maintain a clear audit trail.')}
+        {renderSignupRequestsPanel()}
+      </>
     );
   };
 
@@ -2658,71 +3071,40 @@ export function App() {
     ];
 
     return (
-      <section className="gitlab-shell">
-        <aside className="gitlab-sidebar panel">
-          <div className="sidebar-group">
-            <p className="section-kicker">Workspace</p>
-            <span className="status-badge status-primary">Gateway connected</span>
-            <button className="button button-primary sidebar-button" onClick={() => openProjectForm('create')} type="button">
-              Create project
-            </button>
-            <button className="button button-ghost sidebar-button" onClick={() => openProjectForm('import')} type="button">
-              Import Git repository
-            </button>
-          </div>
-        </aside>
+      <>
+        {renderPageHero('workspace setup', 'Start with a project', 'Create or import your first project, then expand into repositories, pipelines, wiki pages, and cloud automation.', (
+          <>
+            <button className="button button-primary" onClick={() => openProjectForm('create')} type="button">Create project</button>
+            <button className="button button-ghost" onClick={() => openProjectForm('import')} type="button">Import Git repository</button>
+          </>
+        ))}
 
-        <div className="gitlab-main">
-          <section className="gitlab-header panel">
+        <section className="metrics-grid metrics-grid-compact">
+          {setupMetrics.map((metric) => (
+            <article key={metric.label} className="metric-card metric-card-compact">
+              <p>{metric.label}</p>
+              <strong>{metric.value}</strong>
+              <span>{metric.hint}</span>
+            </article>
+          ))}
+        </section>
+
+        {renderCloudControlPanel(true)}
+
+        <section className="panel stack-panel dashboard-block">
+          <div className="section-heading">
             <div>
-              <p className="eyebrow">operator workspace</p>
-              <h2>Start with a project</h2>
+              <p className="section-kicker">First use</p>
+              <h2>No projects yet</h2>
             </div>
-            <div className="header-actions">
-              <button className="button button-primary" onClick={() => openProjectForm('create')} type="button">
-                Create project
-              </button>
-              <button className="button button-ghost" onClick={() => openProjectForm('import')} type="button">
-                Import Git repository
-              </button>
-              <span className="status-badge status-primary">Updated {formatTime(overview.updated_at)}</span>
-            </div>
-          </section>
-
-          <section className="metrics-grid metrics-grid-compact">
-            {setupMetrics.map((metric) => (
-              <article key={metric.label} className="metric-card metric-card-compact">
-                <p>{metric.label}</p>
-                <strong>{metric.value}</strong>
-                <span>{metric.hint}</span>
-              </article>
-            ))}
-          </section>
-
-          <section className="panel stack-panel dashboard-block">
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">First use</p>
-                <h2>No projects yet</h2>
-              </div>
-            </div>
-            <div className="trace-grid">
-              <article className="trace-card">
-                <h3>Import</h3>
-                <p>Bring in an existing Git repository.</p>
-              </article>
-              <article className="trace-card">
-                <h3>Create</h3>
-                <p>Create a new remote and push your code.</p>
-              </article>
-              <article className="trace-card">
-                <h3>Operate</h3>
-                <p>Repositories and activity appear here after setup.</p>
-              </article>
-            </div>
-          </section>
-        </div>
-      </section>
+          </div>
+          <div className="trace-grid">
+            <article className="trace-card"><h3>Import</h3><p>Bring in an existing Git repository.</p></article>
+            <article className="trace-card"><h3>Create</h3><p>Create a new remote and push your code.</p></article>
+            <article className="trace-card"><h3>Operate</h3><p>Repositories, wiki pages, automation, and observability appear here after setup.</p></article>
+          </div>
+        </section>
+      </>
     );
   };
 
@@ -3278,19 +3660,27 @@ export function App() {
   };
 
   const renderScreen = () => {
-    if (route.name === 'access') {
-      return isPlatformAdmin ? renderAccessReviewScreen() : null;
-    }
-
     if (!overview) {
       return null;
     }
 
-    if (!workspaceHasData || !selectedRepository) {
+    if (!workspaceHasData || (!selectedRepository && route.name !== 'settings' && route.name !== 'access')) {
       return renderEmptyWorkspace();
     }
 
     switch (route.name) {
+      case 'automation':
+        return renderAutomationPage();
+      case 'hardware':
+        return renderHardwarePage();
+      case 'software':
+        return renderSoftwarePage();
+      case 'wiki':
+        return renderWikiPage();
+      case 'settings':
+        return renderSettingsPage();
+      case 'access':
+        return isPlatformAdmin ? renderAccessReviewScreen() : renderSettingsPage();
       case 'repositories':
         return <>{renderRepositoriesPanel()}{renderSecurityPanel()}{renderEventsPanel()}</>;
       case 'reviews':
@@ -3330,7 +3720,7 @@ export function App() {
       {!isLoading && !error && showPublicLanding && publicPage === 'platform' ? renderPlatformPage() : null}
       {!isLoading && !error && (showPublicLanding ? publicPage === 'signin' : !authSession && !authChecking) ? renderSignInPage() : null}
       {!isLoading && !error && showPublicLanding && publicPage === 'signup' ? renderSignUpPage() : null}
-      {!isLoading && !error && !showPublicLanding && authSession ? renderScreen() : null}
+      {!isLoading && !error && !showPublicLanding && authSession ? renderDashboardShell(renderScreen()) : null}
     </main>
   );
 }

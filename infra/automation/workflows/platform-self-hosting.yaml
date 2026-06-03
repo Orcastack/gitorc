@@ -1,0 +1,21 @@
+version: 1
+workflow:
+  name: platform-self-hosting
+  description: Bootstrap, upgrade, and observe the GITORC control plane from inside the sovereign platform it manages.
+  lanes:
+    - name: cloud-config-probe
+      type: command
+      command: cc infra/automation/tools/gitorc_cloud_probe.c -o infra/automation/tools/gitorc_cloud_probe && infra/automation/tools/gitorc_cloud_probe --summary
+    - name: self-bootstrap
+      type: kubernetes
+      manifest: infra/kubernetes/platform/self-hosting.yaml
+    - name: rancher-lifecycle
+      type: ansible
+      playbook: infra/ansible/playbooks/rancher-lifecycle.yml
+      inventory: infra/ansible/inventories/private-cloud/hosts.yml
+    - name: observability-reconcile
+      type: kubernetes
+      manifest: infra/kubernetes/platform/observability-stack.yaml
+    - name: self-upgrade
+      type: pipeline-stage
+      stage: rolling-upgrade

@@ -37,6 +37,7 @@ infra/
 - OVN, OVS, and FRR network automation for routed cluster fabrics.
 - Kubernetes platform modules: namespaces, storage classes, PVC-backed services, ingress, and service accounts.
 - Rancher registration and cluster lifecycle automation.
+- GITORC self-hosting automation for bootstrap, upgrade, and self-monitoring.
 - CI/CD runner infrastructure: dedicated runner pools, runner service accounts, and workload isolation.
 - GPU worker enablement for accelerated workloads.
 - Monitoring and logging: Prometheus/Loki-oriented manifests and scrape configuration.
@@ -48,8 +49,9 @@ infra/
 1. Provision the private-cloud foundation with Terraform from `terraform/environments/private-cloud`.
 2. Run the cloud bootstrap automation from `automation/workflows/cloud-bootstrap.yaml` using the Ansible playbooks in `ansible/`.
 3. Apply the Kubernetes manifests from `kubernetes/base` and `kubernetes/platform` into the target cluster.
-4. Configure environment promotion in `deploy/environments/`.
-5. Enforce artifact and runtime governance from `policy/`.
+4. Reconcile self-hosting and platform upgrade flows from `automation/workflows/platform-self-hosting.yaml`.
+5. Configure environment promotion in `deploy/environments/`.
+6. Enforce artifact and runtime governance from `policy/`.
 
 ## Constraints
 

@@ -5,6 +5,7 @@ resources:
   - storage.yaml
   - ingress.yaml
   - runners.yaml
+  - self-hosting.yaml
   - monitoring.yaml
   - logging.yaml
   - observability-stack.yaml

@@ -186,19 +186,73 @@ type Event struct {
 	Summary      string `json:"summary"`
 }
 
+type CloudLayer struct {
+	Name     string   `json:"name"`
+	Platform string   `json:"platform"`
+	Status   string   `json:"status"`
+	Endpoint string   `json:"endpoint"`
+	Identity string   `json:"identity"`
+	Summary  string   `json:"summary"`
+	Coverage []string `json:"coverage"`
+}
+
+type Cluster struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	Provider           string `json:"provider"`
+	Status             string `json:"status"`
+	Version            string `json:"version"`
+	ControlPlanes      int    `json:"control_planes"`
+	Workers            int    `json:"workers"`
+	GPUWorkers         int    `json:"gpu_workers"`
+	RancherProject     string `json:"rancher_project"`
+	RegistrationStatus string `json:"registration_status"`
+	UpgradePolicy      string `json:"upgrade_policy"`
+	APIEndpoint        string `json:"api_endpoint"`
+}
+
+type AutomationLane struct {
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Status     string `json:"status"`
+	Entrypoint string `json:"entrypoint"`
+	Target     string `json:"target"`
+	LastRun    string `json:"last_run"`
+}
+
+type ObservabilitySurface struct {
+	Name     string `json:"name"`
+	Kind     string `json:"kind"`
+	Status   string `json:"status"`
+	Endpoint string `json:"endpoint"`
+	Backing  string `json:"backing"`
+}
+
+type SelfManagementCapability struct {
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Workflow string `json:"workflow"`
+	Summary  string `json:"summary"`
+}
+
 type Overview struct {
-	Providers       []Provider        `json:"providers"`
-	Repositories    []Repository      `json:"repositories"`
-	CloneOperations []CloneOperation  `json:"clone_operations"`
-	Reviews         []Review          `json:"reviews"`
-	Pipelines       []Pipeline        `json:"pipelines"`
-	Deployments     []Deployment      `json:"deployments"`
-	Containers      []Container       `json:"containers"`
-	Security        DashboardSecurity `json:"security"`
-	Events          []Event           `json:"events"`
-	UpdatedAt       string            `json:"updated_at"`
-	Metrics         []Metric          `json:"metrics"`
-	Activity        []string          `json:"activity"`
+	Providers       []Provider                 `json:"providers"`
+	Repositories    []Repository               `json:"repositories"`
+	CloneOperations []CloneOperation           `json:"clone_operations"`
+	Reviews         []Review                   `json:"reviews"`
+	Pipelines       []Pipeline                 `json:"pipelines"`
+	Deployments     []Deployment               `json:"deployments"`
+	Containers      []Container                `json:"containers"`
+	Security        DashboardSecurity          `json:"security"`
+	Events          []Event                    `json:"events"`
+	UpdatedAt       string                     `json:"updated_at"`
+	Metrics         []Metric                   `json:"metrics"`
+	Activity        []string                   `json:"activity"`
+	CloudLayers     []CloudLayer               `json:"cloud_layers"`
+	Clusters        []Cluster                  `json:"clusters"`
+	AutomationLanes []AutomationLane           `json:"automation_lanes"`
+	Observability   []ObservabilitySurface     `json:"observability"`
+	SelfManagement  []SelfManagementCapability `json:"self_management"`
 }
 
 type Metric struct {
@@ -280,7 +334,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := authenticateLDAPUser(request.Username, request.Password)
+	if err := ensureDefaultLocalAdminAccount(r.Context()); err != nil {
+		writeError(w, http.StatusServiceUnavailable, err)
+		return
+	}
+
+	user, err := authenticateUser(request.Username, request.Password)
 	if err != nil {
 		if errors.Is(err, errInvalidCredentials) {
 			writeError(w, http.StatusUnauthorized, err)
@@ -341,11 +400,29 @@ func handleSignup(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
+	status := "pending_review"
+	message := "Account request submitted for administrator review."
+	if localAuthEnabled() {
+		localStatus, err := createLocalAuthAccount(ctx, requestID, username, email, password)
+		if err != nil {
+			status := http.StatusInternalServerError
+			if isConflictError(err) || strings.Contains(strings.ToLower(err.Error()), "duplicate") {
+				status = http.StatusConflict
+			}
+			writeError(w, status, err)
+			return
+		}
+		status = localStatus
+		if status == "approved" {
+			message = "Account created. You can sign in now."
+		}
+	}
+
 	if err := createSignupRequestRecord(ctx, signupRequestRecord{
 		ID:       requestID,
 		Username: username,
 		Email:    email,
-		Status:   "pending_review",
+		Status:   status,
 	}); err != nil {
 		status := http.StatusInternalServerError
 		if isConflictError(err) || strings.Contains(strings.ToLower(err.Error()), "duplicate") {
@@ -357,8 +434,8 @@ func handleSignup(w http.ResponseWriter, r *http.Request) {
 
 	writeJSONStatus(w, http.StatusAccepted, signupResponse{
 		RequestID: requestID,
-		Status:    "pending_review",
-		Message:   "Account request submitted for administrator review.",
+		Status:    status,
+		Message:   message,
 	})
 }
 
@@ -424,6 +501,11 @@ func handleSignupRequestReview(w http.ResponseWriter, r *http.Request, session s
 			status = http.StatusNotFound
 		}
 		writeError(w, status, err)
+		return
+	}
+
+	if err := syncLocalAuthAccountReview(ctx, requestID, decision.Status); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
