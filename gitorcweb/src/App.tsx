@@ -128,7 +128,7 @@ type LandingHeaderLink = {
 };
 
 const landingBootstrapCommands = [
-  'git clone https://github.com/AtonixCorp/gitorc',
+  'git clone https://github.com/Orcastack/gitorc',
   'cd gitorc',
   'make up',
   'curl http://localhost:8080/healthz',
@@ -178,7 +178,7 @@ const landingPages: LandingPage[] = [
         links: [
           { label: 'Clone the repository', targetId: 'clone-run-locally', detail: 'Repository checkout and first local bootstrap path.' },
           { label: 'Bootstrap locally', targetId: 'bootstrap-locally', detail: 'Bring up the local stack and verify the main endpoints.' },
-          { label: 'Open GitHub repository', href: 'https://github.com/AtonixCorp/gitorc', external: true, detail: 'The implementation base, release trail, and audit surface.' },
+          { label: 'Open GitHub repository', href: 'https://github.com/Orcastack/gitorc', external: true, detail: 'The implementation base, release trail, and audit surface.' },
         ],
       },
       {
@@ -229,9 +229,9 @@ const landingPages: LandingPage[] = [
       {
         title: 'Download artifacts',
         links: [
-          { label: 'Download .deb', href: 'https://github.com/AtonixCorp/gitorc/releases/latest/download/gitorc.deb', external: true, detail: 'Ubuntu and Debian package with systemd unit and packaged gateway runtime.' },
-          { label: 'Download .rpm', href: 'https://github.com/AtonixCorp/gitorc/releases/latest/download/gitorc.rpm', external: true, detail: 'RHEL, CentOS, and Fedora package with service install path.' },
-          { label: 'Download tar.gz', href: 'https://github.com/AtonixCorp/gitorc/releases/latest/download/gitorc.tar.gz', external: true, detail: 'Manual archive including launcher, gateway binary, README, LICENSE, and systemd service file.' },
+          { label: 'Download .deb', href: 'https://github.com/Orcastack/gitorc/releases/latest/download/gitorc.deb', external: true, detail: 'Ubuntu and Debian package with systemd unit and packaged gateway runtime.' },
+          { label: 'Download .rpm', href: 'https://github.com/Orcastack/gitorc/releases/latest/download/gitorc.rpm', external: true, detail: 'RHEL, CentOS, and Fedora package with service install path.' },
+          { label: 'Download tar.gz', href: 'https://github.com/Orcastack/gitorc/releases/latest/download/gitorc.tar.gz', external: true, detail: 'Manual archive including launcher, gateway binary, README, LICENSE, and systemd service file.' },
         ],
       },
       {
@@ -302,7 +302,7 @@ const landingPages: LandingPage[] = [
     intro: 'The repository is the fastest way into the platform. Clone it, inspect the monorepo, and bring up the local runtime before making implementation changes.',
     sections: [
       { title: 'Bootstrap commands', bullets: landingBootstrapCommands },
-      { title: 'Links', links: [{ label: 'Open GitHub repository', href: 'https://github.com/AtonixCorp/gitorc', external: true }, { label: 'Monorepo layout', targetId: 'monorepo-layout' }] },
+      { title: 'Links', links: [{ label: 'Open GitHub repository', href: 'https://github.com/Orcastack/gitorc', external: true }, { label: 'Monorepo layout', targetId: 'monorepo-layout' }] },
     ],
     searchTerms: ['clone', 'run locally', 'bootstrap'],
   },
@@ -722,25 +722,25 @@ const landingPages: LandingPage[] = [
         links: [
           {
             label: 'Join GitHub community',
-            href: 'https://github.com/AtonixCorp/gitorc',
+            href: 'https://github.com/Orcastack',
             external: true,
             detail: 'Follow the repository, discussions, issues, and release activity.',
           },
           {
             label: 'Join GitLab community',
-            href: 'https://gitlab.com',
+            href: 'https://gitlab.com/orcastack',
             external: true,
             detail: 'Use GitLab as an additional collaboration and delivery touchpoint.',
           },
           {
             label: 'Join Discord community',
-            href: 'https://discord.com',
+            href: 'https://discord.gg/zKks5bVFd',
             external: true,
             detail: 'Route implementation questions and operator discussion into live channels.',
           },
           {
             label: 'Join Slack community',
-            href: 'https://slack.com',
+            href: 'https://orcastack.slack.com',
             external: true,
             detail: 'Coordinate platform updates, support threads, and team operations.',
           },
@@ -1595,21 +1595,21 @@ export function App() {
         description: 'Track automation lanes that deploy Proxmox, OpenStack, Kubernetes, Rancher, networking, and observability stacks.',
         icon: 'automation' as LandingIconName,
         actionLabel: 'Open deployment docs',
-        onClick: () => window.open('https://github.com/AtonixCorp/gitorc/tree/main/infra', '_blank', 'noreferrer'),
+        onClick: () => window.open('https://github.com/Orcastack/gitorc/tree/main/infra', '_blank', 'noreferrer'),
       },
       {
         title: 'Docs & API reference',
         description: 'Keep architecture, quickstarts, platform deployment docs, and API contracts one click away.',
         icon: 'docs' as LandingIconName,
         actionLabel: 'Open docs',
-        onClick: () => window.open('https://github.com/AtonixCorp/gitorc/tree/main/docs', '_blank', 'noreferrer'),
+        onClick: () => window.open('https://github.com/Orcastack/gitorc/tree/main/docs', '_blank', 'noreferrer'),
       },
       {
         title: 'Community & Support',
         description: 'Route operators and contributors to community channels, onboarding guidance, and support surfaces.',
         icon: 'community' as LandingIconName,
         actionLabel: 'Open community',
-        onClick: () => window.open('https://github.com/AtonixCorp/gitorc', '_blank', 'noreferrer'),
+        onClick: () => window.open('https://github.com/Orcastack', '_blank', 'noreferrer'),
       },
     ],
     [selectedRepository?.id],
@@ -2864,9 +2864,9 @@ export function App() {
               </svg>
             </button>
             <a
-              aria-label="Open AtonixCorp on GitHub"
+              aria-label="Open Orcastack on GitHub"
               className="landing-icon-button"
-              href="https://github.com/AtonixCorp"
+              href="https://github.com/Orcastack"
               rel="noreferrer"
               target="_blank"
             >
@@ -2915,9 +2915,9 @@ export function App() {
             <h1>GITORC</h1>
             <p className="landing-hero-tagline">Integrated Git, CI/CD, virtualization, identity, and secure orchestration.</p>
             <div className="landing-hero-actions">
-              <a className="button button-ghost" href="https://discord.com" rel="noreferrer" target="_blank">Join Discord</a>
-              <a className="button button-ghost" href="https://slack.com" rel="noreferrer" target="_blank">Join Slack</a>
-              <a className="button button-ghost" href="https://github.com/AtonixCorp/gitorc" rel="noreferrer" target="_blank">Open repository</a>
+              <a className="button button-ghost" href="https://discord.gg/zKks5bVFd" rel="noreferrer" target="_blank">Join Discord</a>
+              <a className="button button-ghost" href="https://orcastack.slack.com" rel="noreferrer" target="_blank">Join Slack</a>
+              <a className="button button-ghost" href="https://github.com/Orcastack/gitorc" rel="noreferrer" target="_blank">Open repository</a>
             </div>
           </article>
         </section>
@@ -2964,9 +2964,9 @@ export function App() {
               </svg>
             </button>
             <a
-              aria-label="Open AtonixCorp on GitHub"
+              aria-label="Open Orcastack on GitHub"
               className="landing-icon-button"
-              href="https://github.com/AtonixCorp"
+              href="https://github.com/Orcastack"
               rel="noreferrer"
               target="_blank"
             >
