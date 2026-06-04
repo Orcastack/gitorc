@@ -22,10 +22,11 @@ export function PublicHeader({ currentPage, onNavigate, onLogin, onSignup }: Pub
           <span className="brand-mark">G</span>
           <div>
             <span className="eyebrow">GITORC</span>
-            <strong>DevSecOps Platform</strong>
           </div>
         </div>
-        <span className="brand-badge">Self-managed premium edition</span>
+        <strong>
+        <span className="brand-badge">DevSecOps Platform</span>
+        </strong>
       </div>
       <nav className="landing-nav" aria-label="Primary">
         {routes.map((item) => (
